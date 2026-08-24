@@ -1,0 +1,7 @@
+- insert:
+    - id: missher-evolution
+      name: dsh-missher-evolution
+      config:
+        enabled: true
+        maintenanceIntervalHours: 24
+        maxInjectedRules: 4
