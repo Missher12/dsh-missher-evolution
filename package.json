@@ -37,6 +37,8 @@
     "lib",
     "cordis.patch.yml",
     "README.md",
+    "OFFICIAL_DISTRIBUTION.md",
+    "TRADEMARKS.md",
     "LICENSE"
   ],
   "engines": {

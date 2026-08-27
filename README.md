@@ -13,6 +13,12 @@ The same JavaScript tarball runs on macOS Intel, macOS Apple Silicon, and Window
 x64. There is no install-time build, native binary, external daemon, Python
 runtime, messaging connector, or remote analytics service.
 
+## Official distribution and branding / 官方分发与品牌
+
+Source code remains available under [MIT](LICENSE). Re-uploading official plugin archives, checksums, or other Release assets under Missher identity, or using Missher branding to imply an unofficial build is official, requires prior written confirmation from `Missher12`. See [OFFICIAL_DISTRIBUTION.md](OFFICIAL_DISTRIBUTION.md) and [TRADEMARKS.md](TRADEMARKS.md).
+
+源码继续使用 [MIT](LICENSE)。以 Missher 官方身份二传插件压缩包、校验文件或其他 Release 资产，或者使用 Missher 品牌让非官方构建看起来像官方版本，必须事先取得 `Missher12` 的书面确认。详见 [OFFICIAL_DISTRIBUTION.md](OFFICIAL_DISTRIBUTION.md) 和 [TRADEMARKS.md](TRADEMARKS.md)。
+
 ## Install
 
 Build and verify a local release tarball from this directory:

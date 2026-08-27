@@ -23,7 +23,14 @@ describe('bundle manifest', () => {
     expect(manifest.scripts).toMatchObject({
       'verify:package': 'node scripts/verify-package.mjs',
     })
-    expect(manifest.files).toEqual(['lib', 'cordis.patch.yml', 'README.md', 'LICENSE'])
+    expect(manifest.files).toEqual([
+      'lib',
+      'cordis.patch.yml',
+      'README.md',
+      'OFFICIAL_DISTRIBUTION.md',
+      'TRADEMARKS.md',
+      'LICENSE',
+    ])
     expect(existsSync(resolve(root, 'scripts/verify-package.mjs'))).toBe(true)
     expect(JSON.stringify(manifest)).not.toMatch(/python|hermes|feishu/i)
   })
