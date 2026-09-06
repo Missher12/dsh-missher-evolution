@@ -21,6 +21,12 @@ Source code remains available under [MIT](LICENSE). Re-uploading official plugin
 
 ## Install
 
+If an Agent is installing this plugin on a fresh computer, read
+[AGENT_INTEGRATION.md](AGENT_INTEGRATION.md) first. It is the operational contract
+for package verification, Profile installation, optional Brain Hub capability,
+review, rollback, privacy, and the evidence required before claiming that the
+plugin is connected.
+
 Build and verify a local release tarball from this directory:
 
 ```text

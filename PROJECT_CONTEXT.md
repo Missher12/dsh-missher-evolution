@@ -32,6 +32,8 @@ messaging or infinite optimization loop. Canonical repository:
   backups and explicit restore. State remains `$DSH_HOME/missher-evolution`.
 - `remote*.ts`, `typert*.ts`, `client/`: snapshot, enabled, reviewRule, reset, restore;
   UI shows approval, scope, evidence and expiry with revision/version guards.
+- `AGENT_INTEGRATION.md`: packaged fresh-machine Agent runbook with exact identities,
+  install/preflight commands, Brain Hub boundary, Remote calls, privacy and acceptance.
 - `maintenance.ts`, `advisor.ts`: bounded maintenance and candidate text suggestions.
   Rewrites clear approval and Trial evidence; approved text is not rewritten.
 

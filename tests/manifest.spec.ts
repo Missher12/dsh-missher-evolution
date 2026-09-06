@@ -26,12 +26,14 @@ describe('bundle manifest', () => {
     expect(manifest.files).toEqual([
       'lib',
       'cordis.patch.yml',
+      'AGENT_INTEGRATION.md',
       'README.md',
       'OFFICIAL_DISTRIBUTION.md',
       'TRADEMARKS.md',
       'LICENSE',
     ])
     expect(existsSync(resolve(root, 'scripts/verify-package.mjs'))).toBe(true)
+    expect(existsSync(resolve(root, 'AGENT_INTEGRATION.md'))).toBe(true)
     expect(JSON.stringify(manifest)).not.toMatch(/python|hermes|feishu/i)
   })
 
@@ -46,6 +48,7 @@ describe('bundle manifest', () => {
     }
     expect(readme).toContain('>=0.1.8 <0.2.0')
     expect(readme).toContain('$DSH_HOME/missher-evolution')
+    expect(readme).toContain('AGENT_INTEGRATION.md')
     expect(readme).not.toMatch(/requires? (?:Hermes|Feishu)|依赖(?: Hermes|飞书)/iu)
   })
 })

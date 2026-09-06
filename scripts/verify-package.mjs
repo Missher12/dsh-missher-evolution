@@ -9,6 +9,7 @@ import { pathToFileURL } from 'node:url'
 const REQUIRED_FILES = new Set([
   'package/package.json',
   'package/cordis.patch.yml',
+  'package/AGENT_INTEGRATION.md',
   'package/OFFICIAL_DISTRIBUTION.md',
   'package/TRADEMARKS.md',
   'package/lib/index.js',
