@@ -11,6 +11,11 @@ export const EvolutionRuleViewSchema = z.object({
   category: z.enum(RULE_CATEGORIES),
   taskType: z.enum(TASK_TYPES),
   instruction: z.string().min(8).max(500),
+  approved: z.boolean().optional(),
+  version: safeInteger.optional(),
+  sourceSessions: counter.optional(),
+  trialSessions: counter.optional(),
+  expiresAt: safeInteger.nullable().optional(),
   confidence: z.number().min(0).max(1),
   opportunities: counter,
   successes: counter,
@@ -22,7 +27,9 @@ export const EvolutionSnapshotSchema = z.object({
   schemaVersion: z.literal(1),
   revision: safeInteger,
   enabled: z.boolean(),
+  contributionAvailable: z.boolean().optional(),
   health: z.enum(['healthy', 'degraded', 'state_unavailable', 'lock_busy']),
+  lastBackupId: z.string().regex(/^backup_(?:maintenance|reset|upgrade)_\d+_\d+_[0-9a-f]{12}$/u).nullable().optional(),
   lastMaintenanceAt: safeInteger.nullable(),
   counters: z.object({
     captures: counter,
@@ -43,6 +50,21 @@ export const SetEnabledRequestSchema = z.object({
   enabled: z.boolean(),
   expectedRevision: safeInteger,
 }).strict()
+
+export const RestoreRequestSchema = z.object({
+  expectedRevision: safeInteger,
+  backupId: z.string().regex(/^backup_(?:maintenance|reset|upgrade)_\d+_\d+_[0-9a-f]{12}$/u),
+  confirmation: z.literal('RESTORE'),
+}).strict()
+export type RestoreRequest = z.infer<typeof RestoreRequestSchema>
+
+export const ReviewRuleRequestSchema = z.object({
+  ruleId: z.string().regex(/^rule_[a-z0-9_]{1,96}$/u),
+  expectedRevision: safeInteger,
+  expectedVersion: safeInteger,
+  action: z.enum(['approve', 'revoke']),
+}).strict()
+export type ReviewRuleRequest = z.infer<typeof ReviewRuleRequestSchema>
 
 export const ResetRequestSchema = z.object({
   confirmation: z.literal('RESET'),
@@ -68,6 +90,22 @@ const PACKAGE = 'dsh-missher-evolution'
 const SERVICE = 'missherEvolution'
 
 export const invocationDescriptors = Object.freeze([
+  {
+    id: `${PACKAGE}#${SERVICE}/restore`, service: SERVICE, namespace: SERVICE,
+    method: 'restore', invocation: { kind: 'direct' },
+    parameters: [{ name: 'request', wire: 'request', source: 'json',
+      codec: strictCodec(`${PACKAGE}#RestoreRequest`, RestoreRequestSchema) }],
+    result: strictCodec(`${PACKAGE}#EvolutionSnapshot`, EvolutionSnapshotSchema),
+    sourceLocation: { file: 'src/remote.ts', line: 50, column: 3 },
+  },
+  {
+    id: `${PACKAGE}#${SERVICE}/reviewRule`, service: SERVICE, namespace: SERVICE,
+    method: 'reviewRule', invocation: { kind: 'direct' },
+    parameters: [{ name: 'request', wire: 'request', source: 'json',
+      codec: strictCodec(`${PACKAGE}#ReviewRuleRequest`, ReviewRuleRequestSchema) }],
+    result: strictCodec(`${PACKAGE}#EvolutionSnapshot`, EvolutionSnapshotSchema),
+    sourceLocation: { file: 'src/remote.ts', line: 50, column: 3 },
+  },
   {
     id: `${PACKAGE}#${SERVICE}/snapshot`,
     service: SERVICE,

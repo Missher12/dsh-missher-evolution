@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
 import type {
+  RestoreRequest,
+  ReviewRuleRequest,
   EvolutionSnapshot,
   RemoteResetRequest,
   RemoteResetResult,
@@ -11,6 +13,8 @@ import type { EvolutionKey } from './locales.js'
 import styles from './EvolutionSection.module.css'
 
 export interface EvolutionSectionProps {
+  restore?: (request: RestoreRequest) => Promise<RemoteResult<EvolutionSnapshot>>
+  reviewRule?: (request: ReviewRuleRequest) => Promise<RemoteResult<EvolutionSnapshot>>
   snapshot: () => Promise<RemoteResult<EvolutionSnapshot>>
   setEnabled: (request: SetEnabledRequest) => Promise<RemoteResult<EvolutionSnapshot>>
   reset: (request: RemoteResetRequest) => Promise<RemoteResult<RemoteResetResult>>
@@ -20,10 +24,10 @@ export interface EvolutionSectionProps {
 export function EvolutionSection(props: Partial<EvolutionSectionProps>): ReactNode {
   const { snapshot, setEnabled, reset, t } = props
   if (snapshot === undefined || setEnabled === undefined || reset === undefined || t === undefined) return null
-  return <Loaded snapshot={snapshot} setEnabled={setEnabled} reset={reset} t={t} />
+  return <Loaded {...(props.restore === undefined ? {} : { restore: props.restore })} {...(props.reviewRule === undefined ? {} : { reviewRule: props.reviewRule })} snapshot={snapshot} setEnabled={setEnabled} reset={reset} t={t} />
 }
 
-function Loaded({ snapshot, setEnabled, reset, t }: EvolutionSectionProps): ReactNode {
+function Loaded({ restore, reviewRule, snapshot, setEnabled, reset, t }: EvolutionSectionProps): ReactNode {
   const [view, setView] = useState<EvolutionSnapshot>()
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
@@ -63,6 +67,24 @@ function Loaded({ snapshot, setEnabled, reset, t }: EvolutionSectionProps): Reac
         if (result.ok) setView(result.value)
         else setNotice('operationConflict')
       })
+      .catch(() => { setNotice('operationConflict') })
+      .finally(() => { setPending(false) })
+  }
+
+  const review = (ruleId: string, expectedVersion: number, action: 'approve' | 'revoke'): void => {
+    if (!view || pending || !reviewRule) return
+    setPending(true)
+    void reviewRule({ ruleId, expectedVersion, expectedRevision: view.revision, action })
+      .then(result => { if (result.ok) setView(result.value); else setNotice('operationConflict') })
+      .catch(() => { setNotice('operationConflict') })
+      .finally(() => { setPending(false) })
+  }
+
+  const restoreState = (): void => {
+    if (!view?.lastBackupId || !restore || pending || confirmation !== 'RESTORE') return
+    setPending(true)
+    void restore({ backupId: view.lastBackupId, expectedRevision: view.revision, confirmation: 'RESTORE' })
+      .then(result => { if (result.ok) { setView(result.value); setConfirmation('') } else setNotice('operationConflict') })
       .catch(() => { setNotice('operationConflict') })
       .finally(() => { setPending(false) })
   }
@@ -136,6 +158,7 @@ function Loaded({ snapshot, setEnabled, reset, t }: EvolutionSectionProps): Reac
         <span className={styles['health']} data-health={view.health}>{t(healthKey)}</span>
       </div>
 
+      {view.contributionAvailable === false ? <p role="status">{t('brainUnavailable')}</p> : null}
       {notice === undefined ? null : <p className={styles['notice']} role="status">{t(notice)}</p>}
 
       <div className={styles['metrics']}>
@@ -159,6 +182,12 @@ function Loaded({ snapshot, setEnabled, reset, t }: EvolutionSectionProps): Reac
                 <span>{t(`task_${rule.taskType}`)}</span>
               </div>
               <p>{rule.instruction}</p>
+              <small>{t(rule.approved ? 'approved' : 'pendingReview')} · {t('evidence')}: {rule.sourceSessions ?? 0} / {rule.trialSessions ?? 0} · {t('expiry')}: {rule.expiresAt == null ? '—' : new Date(rule.expiresAt).toLocaleString()}</small>
+              {reviewRule === undefined ? null : <button type="button"
+                disabled={pending || rule.version === undefined || (!rule.approved && (rule.status === 'retired' || rule.status === 'suspended'))}
+                onClick={() => review(rule.id, rule.version!, rule.approved ? 'revoke' : 'approve')}>
+                {t(rule.approved ? 'revoke' : 'approve')}
+              </button>}
               <small>{`${t('successFailure')}: ${rule.successes} / ${rule.failures}`}</small>
             </article>
           ))}
@@ -193,6 +222,10 @@ function Loaded({ snapshot, setEnabled, reset, t }: EvolutionSectionProps): Reac
         >
           {t('resetAction')}
         </button>
+        {restore === undefined || !view.lastBackupId ? null : <>
+          <p>{t('restoreDescription')}</p>
+          <button type="button" disabled={pending || confirmation !== 'RESTORE'} onClick={restoreState}>{t('restore')}</button>
+        </>}
       </div>
     </section>
   )

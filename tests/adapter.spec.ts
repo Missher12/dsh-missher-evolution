@@ -191,6 +191,6 @@ describe('MseAdapter', () => {
     })
     await adapter.drain()
     expect(store.state.counters.captures).toBe(1)
-    expect(store.state.rules[0]?.workflowSteps).toEqual(['shell'])
+    expect(store.state.rules).toEqual([]) // completed without an assistant result is partial
   })
 })

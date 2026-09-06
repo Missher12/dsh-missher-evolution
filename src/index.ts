@@ -23,7 +23,7 @@ declare module '@deepseek-ai/cordis' {
 }
 
 export const name = 'missher-evolution'
-export const inject = ['agents', 'tools', 'llm', 'dshHomePath', 'missherBrain']
+export const inject = ['agents', 'tools', 'llm', 'dshHomePath']
 
 export const Config: z<PluginConfig> = z.object({
   enabled: z.boolean(),
@@ -55,11 +55,19 @@ export function apply(ctx: Context, input: PluginConfig = {}): void {
       : Promise.resolve({ status: 'skipped_no_route' }),
     warn: code => ctx.logger.warn('dsh-missher-evolution: %s', code),
   })
+  let contributionAvailable = false
   new MissherEvolutionRemote(ctx, store, {
+    contributionAvailable: () => contributionAvailable,
     warn: code => ctx.logger.warn('dsh-missher-evolution: %s', code),
   })
   ctx.provide('missherEvolutionCore', adapter)
-  ctx.effect(() => ctx.missherBrain.register(brainProvider), 'dsh-missher-evolution: brain provider')
+  ctx.inject(['missherBrain'], brain => {
+    brain.effect(() => {
+      const unregister = brain.missherBrain.register(brainProvider)
+      contributionAvailable = true
+      return () => { contributionAvailable = false; unregister() }
+    }, 'dsh-missher-evolution: brain provider')
+  })
   ctx.on('agent/pre-step', (payload, next) =>
     adapter.preStep(payload as never, next as never) as never)
   ctx.on('tools/result', (exec, result) => { adapter.toolsResult(exec as never, result as never) })

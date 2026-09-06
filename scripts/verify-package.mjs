@@ -164,7 +164,7 @@ function assertManifest(value) {
   }
   if (
     value.name !== 'dsh-missher-evolution'
-    || value.version !== '0.1.1'
+    || value.version !== '0.1.2'
     || value.type !== 'module'
     || value.main !== 'lib/index.js'
     || value.types !== 'lib/index.d.ts'

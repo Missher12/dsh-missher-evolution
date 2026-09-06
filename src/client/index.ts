@@ -5,6 +5,8 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import TYPERT_REMOTE from '../typert.remote-client.js'
 import type {} from '../typert.remote-client.js'
 import type {
+  RestoreRequest,
+  ReviewRuleRequest,
   EvolutionSnapshot,
   RemoteResetRequest,
   RemoteResetResult,
@@ -27,6 +29,8 @@ export async function apply(ctx: ClientContext): Promise<() => Promise<void>> {
   // resolves before apply runs), so resolve the mounted namespace service
   // directly after $mount instead.
   const remote = ctx.get('remote.missherEvolution') as {
+    restore: (request: RestoreRequest) => Promise<RemoteResult<EvolutionSnapshot>>
+    reviewRule: (request: ReviewRuleRequest) => Promise<RemoteResult<EvolutionSnapshot>>
     snapshot: () => Promise<RemoteResult<EvolutionSnapshot>>
     setEnabled: (request: SetEnabledRequest) => Promise<RemoteResult<EvolutionSnapshot>>
     reset: (request: RemoteResetRequest) => Promise<RemoteResult<RemoteResetResult>>
@@ -40,6 +44,8 @@ export async function apply(ctx: ClientContext): Promise<() => Promise<void>> {
     label: () => t('nav'),
     locale: NS,
     inject: (): EvolutionSectionProps => ({
+      restore: request => remote.restore(request),
+      reviewRule: request => remote.reviewRule(request),
       snapshot: () => remote.snapshot(),
       setEnabled: request => remote.setEnabled(request),
       reset: request => remote.reset(request),

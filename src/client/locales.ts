@@ -1,7 +1,11 @@
 export const zh = {
+  approved: '已审核', pendingReview: '待审核', approve: '批准此规则', revoke: '撤销批准',
+  evidence: '来源会话 / 试用成功会话', expiry: '失效时间',
+  restore: '恢复最近备份', restoreDescription: '在上方输入 RESTORE 恢复最近备份。恢复前保存当前状态，恢复的规则均需重新审核。',
+  brainUnavailable: '宿主未提供 Brain Hub：可管理本地规则，规则暂不贡献到任务。',
   nav: '进化',
   title: '进化',
-  subtitle: '在本机从已验证的任务结果中学习，不保存对话原文。',
+  subtitle: '本机收集规则候选；完成信号不代表效果验证，审核后才贡献规则。适用于当前配置档案的同类任务，不保存对话原文。',
   loading: '正在读取进化状态…',
   loadFailed: '无法读取进化状态。',
   retry: '重试',
@@ -49,9 +53,13 @@ export const zh = {
 export type EvolutionKey = keyof typeof zh
 
 export const en: Record<EvolutionKey, string> = {
+  approved: 'Approved', pendingReview: 'Awaiting review', approve: 'Approve rule', revoke: 'Revoke approval',
+  evidence: 'Source sessions / successful trial sessions', expiry: 'Expires',
+  restore: 'Restore latest backup', restoreDescription: 'Type RESTORE above. Current state is backed up first; restored rules require review again.',
+  brainUnavailable: 'Brain Hub unavailable: local rules can be managed, but cannot contribute to tasks.',
   nav: 'Evolution',
   title: 'Evolution',
-  subtitle: 'Learns locally from verified task outcomes without storing conversation text.',
+  subtitle: 'Collects local rule candidates. Completion signals are not proof of effectiveness. Review before contribution; scope is this profile and task category.',
   loading: 'Loading evolution status…',
   loadFailed: 'Unable to load evolution status.',
   retry: 'Retry',

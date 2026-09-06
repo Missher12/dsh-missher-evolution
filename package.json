@@ -1,6 +1,6 @@
 {
   "name": "dsh-missher-evolution",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "type": "module",
   "description": "Privacy-bounded self-improvement plugin for DeepSeek Harness",

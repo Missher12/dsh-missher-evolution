@@ -34,6 +34,7 @@ const RULE_ID = /^rule_[a-z0-9_]{1,96}$/u
 const HASH = /^[0-9a-f]{64}$/u
 const BACKUP_ID = /^backup_(?:maintenance|reset|upgrade)_\d+_\d+_[0-9a-f]{12}$/u
 const AUDIT_REASONS = [
+  'review_approved', 'review_revoked',
   'success', 'failure', 'correction', 'partial', 'candidate_created',
   'candidate_promoted', 'trial_promoted', 'rule_suspended', 'rule_retired',
   'expired', 'duplicate', 'subagent', 'cron', 'internal', 'plugin_message',
@@ -71,6 +72,8 @@ export const evolutionRuleSchema = z.object({
   lastSuccessAt: safeInteger.nullable(),
   expiresAt: safeInteger.nullable(),
   sessionHashes: uniqueHashes,
+  approvedHash: hash.nullable().optional(),
+  trialSessionHashes: uniqueHashes.optional(),
   version: z.number().int().min(1).max(1_000_000),
   opportunities: counter,
   successes: counter,
@@ -263,6 +266,22 @@ export class EvolutionStore {
     return this.readStateFile(path)
   }
 
+  async restore(input: { expectedRevision: number, backupId: string, confirmation: 'RESTORE' }): Promise<EvolutionState> {
+    if (input.confirmation !== 'RESTORE' || !BACKUP_ID.test(input.backupId)) throw new StoreError('backup_failed')
+    return this.withLock(async () => {
+      const current = await this.loadInternal(true)
+      if (current.revision !== input.expectedRevision) throw new StoreError('revision_conflict')
+      const restored = await this.readBackup(input.backupId)
+      const backupId = await this.backupState(current, 'upgrade')
+      // Restore content, never resurrect old approval or old revision tokens.
+      for (const rule of restored.rules) { rule.approvedHash = null; rule.version += 1 }
+      const state = this.parseState({ ...restored, enabled: current.enabled,
+        revision: current.revision + 1, updatedAt: this.now(), lastBackupId: backupId })
+      await this.atomicWriteJson(this.statePath, state)
+      return structuredClone(state)
+    })
+  }
+
   async reset(input: ResetRequest): Promise<{ state: EvolutionState, backupId: string }> {
     if (input.confirmation !== 'RESET') throw new StoreError('invalid_reset')
     return this.withLock(async () => {
@@ -309,7 +328,8 @@ export class EvolutionStore {
       if (!(error instanceof StoreError) || error.code !== 'state_corrupt' || !recover) throw error
       const backup = await this.latestValidBackup()
       if (backup === undefined) throw error
-      return { ...backup, health: 'degraded' }
+      return { ...backup, health: 'degraded',
+        rules: backup.rules.map(rule => ({ ...rule, approvedHash: null })) }
     }
   }
 

@@ -185,3 +185,14 @@ describe('EvolutionSection', () => {
     expect((screen.getByRole('checkbox', { name: '启用自动进化' }) as HTMLInputElement).checked).toBe(false)
   })
 })
+
+test('reviews a visible rule at its displayed revision and version', async () => {
+  const rule = { id: 'rule_review', status: 'trial' as const, category: 'workflow' as const,
+    taskType: 'coding' as const, instruction: '执行前检查目标，完成后验证结果。', confidence: 0.8,
+    successes: 0, failures: 0, corrections: 0, opportunities: 0, version: 2, approved: false }
+  const reviewRule = vi.fn(async () => ({ ok: true as const, value: snapshot({ revision: 3, rules: [{ ...rule, approved: true, version: 3 }] }) }))
+  render(<EvolutionSection {...props({ snapshot: async () => ({ ok: true, value: snapshot({ rules: [rule], contributionAvailable: false }) }), reviewRule })} />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.approve }))
+  await waitFor(() => expect(reviewRule).toHaveBeenCalledWith({ ruleId: rule.id, action: 'approve', expectedRevision: 2, expectedVersion: 2 }))
+  expect(await screen.findByRole('button', { name: zh.revoke })).toBeDefined()
+})

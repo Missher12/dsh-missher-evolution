@@ -21,6 +21,7 @@ export interface TurnSnapshot extends OpenTurnInput {
   sessionId: string
   turnId: string
   workflowSteps: WorkflowStep[]
+  injectedRuleVersions: Record<string, number>
   injectedRuleIds: string[]
   errorKind: ErrorKind
   assistantOutcome: Outcome | null
@@ -58,6 +59,7 @@ function copyTurn(turn: TurnSnapshot): TurnSnapshot {
   return {
     ...turn,
     workflowSteps: [...turn.workflowSteps],
+    injectedRuleVersions: { ...turn.injectedRuleVersions },
     injectedRuleIds: [...turn.injectedRuleIds],
   }
 }
@@ -103,6 +105,7 @@ export class TurnRegistry {
       correction: input.correction,
       preference: input.preference,
       workflowSteps: [],
+      injectedRuleVersions: {},
       injectedRuleIds: [],
       errorKind: 'none',
       assistantOutcome: null,
@@ -114,7 +117,7 @@ export class TurnRegistry {
     return copyTurn(opened)
   }
 
-  setInjectedRules(sessionId: unknown, turnId: unknown, ruleIds: readonly string[]): boolean {
+  setInjectedRules(sessionId: unknown, turnId: unknown, ruleIds: readonly string[], versions: Record<string, number> = {}): boolean {
     if (
       !Array.isArray(ruleIds)
       || ruleIds.length > MAX_INJECTED_RULES
@@ -123,6 +126,7 @@ export class TurnRegistry {
     ) return false
     const state = this.find(sessionId, turnId)
     if (state === undefined || state.captured || state.filtered) return false
+    state.injectedRuleVersions = { ...versions }
     state.injectedRuleIds = [...ruleIds]
     state.touchedAt = this.now()
     return true

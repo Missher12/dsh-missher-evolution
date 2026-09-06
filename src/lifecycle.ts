@@ -132,7 +132,7 @@ function workflowInstruction(taskType: TaskType, steps: readonly WorkflowStep[])
   if (stages.length === 0) {
     return `处理相似${TASK_LABELS[taskType]}任务时，先${TASK_GUIDANCE[taskType]}。回复前比较每项结论与现有证据，逐项检查输出格式和完成条件；发现不一致时立即修正，无法验证的内容必须说明限制。`
   }
-  return `处理相似${TASK_LABELS[taskType]}任务时，先${TASK_GUIDANCE[taskType]}。按照已验证的工作流，先${stages.join('，再')}。完成后比较实际结果与用户要求，逐项验证明确约束；发现不一致时立即修正。`
+  return `处理相似${TASK_LABELS[taskType]}任务时，先${TASK_GUIDANCE[taskType]}。检查观测到的操作类别：${stages.join('，')}；具体顺序以当前任务约束为准。完成后比较实际结果与用户要求，逐项验证明确约束；发现不一致时立即修正。`
 }
 
 function guardrailInstruction(taskType: TaskType, errorKind: CaptureEvent['errorKind']): string {
@@ -201,17 +201,14 @@ function transition(
 }
 
 function matchesAttribution(rule: EvolutionRule, event: CaptureEvent): boolean {
+  if (rule.approvedHash !== rule.instructionHash) return false
+  if (rule.expiresAt !== null && rule.expiresAt <= event.occurredAt) return false
   if (rule.status !== 'trial' && rule.status !== 'active') return false
-  const exactTask = rule.taskType === event.taskType
-  const crossTask = rule.status === 'active'
-    && rule.taskType === 'general'
-    && (rule.category === 'workflow' || rule.category === 'general')
-  if (!exactTask && !crossTask) return false
-  if (rule.status === 'trial') return exactTask
-  if (rule.category === 'preference' || rule.category === 'guardrail') return exactTask
+  if (rule.taskType !== event.taskType) return false
+  if (event.correction || event.outcome === 'failure' || event.outcome === 'corrected' || event.errorKind !== 'none') return true
+  if (rule.category === 'preference' || rule.category === 'guardrail') return true
   return rule.workflowFamily === workflowFamily(event.taskType, event.workflowSteps)
     || rule.observedWorkflowSignatures.includes(event.workflowSignature)
-    || crossTask
 }
 
 function attributeInjected(
@@ -222,25 +219,30 @@ function attributeInjected(
   const offered = new Set(event.injectedRuleIds)
   for (const rule of state.rules) {
     if (!offered.has(rule.id) || !matchesAttribution(rule, event)) continue
+    if (event.injectedRuleVersions !== undefined && event.injectedRuleVersions[rule.id] !== rule.version) continue
     rule.opportunities += 1
-    rule.lastEvidenceAt = event.occurredAt
-    rule.sessionHashes = boundedUnique(rule.sessionHashes, event.sessionHash)
-    if (event.outcome === 'success') {
+    if (event.outcome === 'success' && !event.correction && event.errorKind === 'none') {
+      if (rule.sessionHashes.includes(event.sessionHash) || (rule.trialSessionHashes ?? []).includes(event.sessionHash)) continue
+      rule.lastEvidenceAt = event.occurredAt
+      rule.trialSessionHashes = boundedUnique(rule.trialSessionHashes ?? [], event.sessionHash)
       rule.successes += 1
       rule.lastSuccessAt = event.occurredAt
       rule.confidence = roundConfidence(rule.confidence + 0.08)
       rule.expiresAt = expiryFor(rule.status, rule.category, event.occurredAt)
-    } else if (event.outcome === 'failure') {
+    } else if (event.outcome === 'failure' || event.errorKind !== 'none') {
+      rule.lastEvidenceAt = event.occurredAt
       rule.failures += 1
       rule.confidence = roundConfidence(rule.confidence - 0.2)
       transition(transitions, rule, rule.failures >= 2 ? 'retired' : 'suspended', 'failure')
     } else if (event.outcome === 'corrected' || event.correction) {
+      rule.lastEvidenceAt = event.occurredAt
       rule.corrections += 1
       rule.confidence = roundConfidence(rule.confidence - 0.3)
       transition(transitions, rule, 'suspended', 'correction')
     }
     if (
       rule.status === 'trial'
+      && (rule.trialSessionHashes ?? []).length >= 3
       && rule.successes >= 3
       && rule.confidence >= 0.75
       && rule.failures === 0
@@ -253,7 +255,7 @@ function sourceCategory(event: CaptureEvent): RuleCategory | null {
   if (event.preference !== null) return 'preference'
   if (event.correction || event.outcome === 'corrected') return 'guardrail'
   if (event.outcome === 'failure' && event.errorKind !== 'none') return 'guardrail'
-  if (event.outcome === 'success') {
+  if (event.outcome === 'success' && event.errorKind === 'none') {
     if (event.taskType === 'general' && event.workflowSteps.length === 0) return null
     return 'workflow'
   }
@@ -268,11 +270,17 @@ function applySourceEvidence(
 ): void {
   const family = familyFor(event, category)
   const existing = state.rules.find(rule =>
-    rule.status !== 'retired'
-    && rule.taskType === event.taskType
+    rule.taskType === event.taskType
     && rule.category === category
     && rule.workflowFamily === family)
   if (existing !== undefined) {
+    if (existing.status === 'retired' || existing.status === 'suspended') return
+    if (existing.expiresAt !== null && existing.expiresAt <= event.occurredAt) {
+      transition(transitions, existing, 'retired', 'expired')
+      return
+    }
+    // Source observations cannot refresh the lifetime of a deployed rule.
+    if (existing.status !== 'candidate') return
     existing.sessionHashes = boundedUnique(existing.sessionHashes, event.sessionHash)
     existing.observedWorkflowSignatures = boundedUnique(
       existing.observedWorkflowSignatures,
@@ -284,6 +292,7 @@ function applySourceEvidence(
     if (existing.status === 'candidate' && existing.sessionHashes.length >= 3) {
       existing.confidence = Math.max(existing.confidence, 0.75)
       transition(transitions, existing, 'trial', 'candidate_promoted')
+      existing.trialSessionHashes = []
       existing.opportunities = 0
       existing.successes = 0
       existing.failures = 0
@@ -292,6 +301,7 @@ function applySourceEvidence(
     return
   }
 
+  if (state.rules.length >= MAX_RULES) return
   const instruction = instructionFor(event, category)
   const id = `rule_${sha256(JSON.stringify({ category, family, taskType: event.taskType })).slice(0, 16)}`
   const rule: EvolutionRule = {
@@ -311,6 +321,8 @@ function applySourceEvidence(
     lastSuccessAt: null,
     expiresAt: expiryFor('candidate', category, event.occurredAt),
     sessionHashes: [event.sessionHash],
+    approvedHash: null,
+    trialSessionHashes: [],
     version: 1,
     opportunities: 0,
     successes: 0,
@@ -324,6 +336,7 @@ function applySourceEvidence(
 export function capture(input: EvolutionState, event: CaptureEvent): CaptureResult {
   const state = structuredClone(input)
   const transitions: RuleTransition[] = []
+  if (!state.enabled) return { state, transitions, audit: [] }
   if (state.recentTaskHashes.includes(event.taskHash)) return { state, transitions, audit: [] }
   state.recentTaskHashes = boundedUnique(state.recentTaskHashes, event.taskHash, MAX_RECENT_TASKS)
   state.counters.captures += 1
@@ -374,16 +387,15 @@ function enforceCapacity(state: EvolutionState, transitions: RuleTransition[]): 
 export function selectRules(state: EvolutionState, request: SelectionRequest): SelectionResult {
   const maxRules = Math.max(1, Math.min(4, Math.trunc(request.maxRules)))
   const maxCodePoints = Math.max(1, Math.min(2_000, request.maxCodePoints ?? 2_000))
-  const eligible = state.rules.filter(rule => {
+  const eligible = (state.enabled ? state.rules : []).filter(rule => {
+    if (rule.approvedHash !== rule.instructionHash) return false
     if (rule.expiresAt !== null && rule.expiresAt <= request.now) return false
     if (rule.status !== 'active' && rule.status !== 'trial') return false
     const exact = rule.taskType === request.taskType
     if (rule.status === 'trial') {
       return exact && rule.confidence >= 0.75 && rule.failures === 0 && rule.corrections === 0
     }
-    if (exact) return true
-    return rule.taskType === 'general'
-      && (rule.category === 'workflow' || rule.category === 'general')
+    return exact
   }).sort((left, right) => {
     const leftExact = Number(left.taskType === request.taskType)
     const rightExact = Number(right.taskType === request.taskType)
@@ -400,12 +412,15 @@ export function selectRules(state: EvolutionState, request: SelectionRequest): S
   const instructions = new Set<string>()
   let total = [...'<missher-evolution-rules>\n\n</missher-evolution-rules>'].length
   let globalWorkflow = false
+  const families = new Set<string>()
   for (const rule of eligible) {
     if (selected.length >= maxRules || instructions.has(rule.instruction)) continue
     const isGlobalWorkflow = request.taskType !== 'general'
       && rule.taskType === 'general'
       && (rule.category === 'workflow' || rule.category === 'general')
     if (isGlobalWorkflow && globalWorkflow) continue
+    const conflictKey = `${rule.taskType}:${rule.category === 'general' ? 'workflow' : rule.category}:${rule.preferenceId ?? ''}`
+    if (families.has(conflictKey)) continue
     const line = `- [${rule.status.toUpperCase()}:${rule.category.toUpperCase()}] ${rule.instruction}`
     const length = [...line].length + 1
     if (total + length > maxCodePoints) continue
@@ -416,6 +431,7 @@ export function selectRules(state: EvolutionState, request: SelectionRequest): S
       taskType: rule.taskType,
       instruction: rule.instruction,
     })
+    families.add(conflictKey)
     lines.push(line)
     instructions.add(rule.instruction)
     globalWorkflow ||= isGlobalWorkflow
@@ -482,6 +498,8 @@ function consolidate(state: EvolutionState, transitions: RuleTransition[], now: 
         primary.observedWorkflowSignatures,
         duplicate.observedWorkflowSignatures,
       )
+      primary.approvedHash = null
+      primary.version += 1
       primary.confidence = Math.max(primary.confidence, duplicate.confidence)
       primary.lastEvidenceAt = Math.max(primary.lastEvidenceAt, duplicate.lastEvidenceAt)
       primary.expiresAt = Math.max(primary.expiresAt ?? 0, duplicate.expiresAt ?? 0) || null

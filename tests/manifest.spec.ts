@@ -9,7 +9,7 @@ describe('bundle manifest', () => {
     const manifest = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'))
     expect(manifest).toMatchObject({
       name: 'dsh-missher-evolution',
-      version: '0.1.1',
+      version: '0.1.2',
       type: 'module',
       main: 'lib/index.js',
       dsh: {

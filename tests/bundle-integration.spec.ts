@@ -131,6 +131,10 @@ async function completedCodingTurn(
     { isError: false },
   )
   adapter.sessionEvent(owner.session, {
+    type: 'assistant/message', time: occurredAt,
+    data: { turn: 1, message: { content: [{ type: 'text', text: '已运行测试并核对结果。' }] } },
+  })
+  adapter.sessionEvent(owner.session, {
     type: 'turn/end',
     time: occurredAt + 1,
     data: { turn: 1, reason: { kind: 'completed' } },
@@ -180,7 +184,9 @@ describe('built Harness bundle integration', () => {
       )
       expect(decision.kind).toBe('enter')
     }
-    expect((await first.remote.snapshot()).counters.trial).toBe(1)
+    const trial = await first.remote.snapshot()
+    expect(trial.counters.trial).toBe(1)
+    await first.remote.reviewRule({ ruleId: trial.rules[0]!.id, expectedVersion: trial.rules[0]!.version!, expectedRevision: trial.revision, action: 'approve' })
 
     for (let index = 0; index < 3; index += 1) {
       const decision = await completedCodingTurn(

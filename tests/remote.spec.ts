@@ -74,6 +74,8 @@ describe('MissherEvolutionRemote', () => {
   test('marks all three methods for the live Harness Gateway', async () => {
     const { remote } = await service()
     expect(remoteMethods(remote)).toEqual([
+      { method: 'restore', invocation: { kind: 'direct' } },
+      { method: 'reviewRule', invocation: { kind: 'direct' } },
       { method: 'snapshot', invocation: { kind: 'direct' } },
       { method: 'setEnabled', invocation: { kind: 'direct' } },
       { method: 'reset', invocation: { kind: 'direct' } },

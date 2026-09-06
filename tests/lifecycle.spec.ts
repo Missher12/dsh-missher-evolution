@@ -37,6 +37,7 @@ function emptyState(now = 0): EvolutionState {
 function activeRule(overrides: Partial<EvolutionRule> = {}): EvolutionRule {
   const now = 1_000
   return {
+    approvedHash: sha256('active instruction'),
     id: 'rule_active',
     status: 'active',
     category: 'workflow',
@@ -77,6 +78,7 @@ describe('deterministic lifecycle', () => {
     for (const id of ['a', 'b', 'c']) {
       state = capture(state, event({ sessionHash: sha256(id), taskHash: sha256(`t-${id}`) })).state
     }
+    state.rules[0]!.approvedHash = state.rules[0]!.instructionHash
     const ruleId = state.rules[0]?.id
     expect(ruleId).toBeDefined()
     for (const id of ['d', 'e', 'f']) {
@@ -112,7 +114,8 @@ describe('deterministic lifecycle', () => {
   test('retires expired and low-value rules during maintenance', () => {
     const expired = activeRule({ expiresAt: DAY, lastEvidenceAt: DAY })
     const noTool = activeRule({
-      id: 'rule_no_tool',
+      approvedHash: sha256('active instruction'),
+    id: 'rule_no_tool',
       taskType: 'general',
       workflowSteps: [],
       workflowFamily: workflowFamily('general', []),
@@ -153,7 +156,8 @@ describe('deterministic lifecycle', () => {
   test('selects exact rules first and bounds count and context', () => {
     const exact = activeRule({ id: 'rule_exact' })
     const global = activeRule({
-      id: 'rule_global',
+      approvedHash: sha256('active instruction'),
+    id: 'rule_global',
       category: 'general',
       taskType: 'general',
       workflowFamily: workflowFamily('general', ['shell']),
@@ -162,7 +166,8 @@ describe('deterministic lifecycle', () => {
       instruction: '处理通用任务时先检查目标和约束，再执行限定步骤；完成后核对结果与请求是否一致。',
     })
     const preference = activeRule({
-      id: 'rule_preference',
+      approvedHash: sha256('active instruction'),
+    id: 'rule_preference',
       category: 'preference',
       preferenceId: 'respond_simplified_chinese',
       instruction: '使用简体中文回答；发送前检查正文语言并确认没有无必要的英文段落。',

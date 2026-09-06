@@ -100,7 +100,19 @@ export class EvolutionBrainProvider implements BrainProviderLike {
           || new Set(handles).size !== handles.length
           || handles.some(handle => !offered.has(handle))
         ) throw new Error('brain_handles_invalid')
-        if (!this.adapter.acceptInjectedRules(input.sessionId, input.turn, handles)) {
+        input.signal.throwIfAborted()
+        const current = await this.store.load()
+        input.signal.throwIfAborted()
+        const valid = selectRules(current, { taskType: classifyPrompt(input.query).taskType, now: this.now(), maxRules: this.maxRules }).rules
+        if (!current.enabled || handles.some(id => {
+          const before = byId.get(id)
+          const after = current.rules.find(rule => rule.id === id)
+          return !valid.some(rule => rule.id === id) || before?.version !== after?.version
+            || before?.instructionHash !== after?.instructionHash
+        })) throw new Error('brain_batch_stale')
+        if (settled) throw new Error('brain_batch_settled')
+        if (!this.adapter.acceptInjectedRules(input.sessionId, input.turn, handles,
+          Object.fromEntries(handles.map(id => [id, byId.get(id)!.version])))) {
           throw new Error('brain_attribution_unavailable')
         }
         settled = true
@@ -114,7 +126,9 @@ export class EvolutionBrainProvider implements BrainProviderLike {
       const state = await this.store.load()
       return {
         state: state.enabled ? 'ready' : 'disabled',
-        count: state.rules.filter(rule => rule.status === 'active' || rule.status === 'trial').length,
+        count: state.rules.filter(rule => state.enabled && rule.approvedHash === rule.instructionHash
+          && (rule.status === 'active' || rule.status === 'trial')
+          && (rule.expiresAt === null || rule.expiresAt > this.now())).length,
       }
     } catch {
       return { state: 'unavailable', count: 0 }

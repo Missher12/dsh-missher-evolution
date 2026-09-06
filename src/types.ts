@@ -83,6 +83,8 @@ export interface EvolutionRule extends RuleCounters {
   lastSuccessAt: number | null
   expiresAt: number | null
   sessionHashes: string[]
+  approvedHash?: string | null | undefined
+  trialSessionHashes?: string[] | undefined
   version: number
 }
 
@@ -121,6 +123,7 @@ export interface CaptureEvent {
   workflowSteps: WorkflowStep[]
   workflowSignature: string
   errorKind: ErrorKind
+  injectedRuleVersions?: Record<string, number>
   injectedRuleIds: string[]
   preference: PreferenceId | null
 }

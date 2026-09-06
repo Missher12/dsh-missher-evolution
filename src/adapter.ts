@@ -152,8 +152,8 @@ export class MseAdapter {
     }
   }
 
-  acceptInjectedRules(sessionId: string, turn: number, ruleIds: readonly string[]): boolean {
-    if (this.disposed || !this.registry.setInjectedRules(sessionId, turn, ruleIds)) return false
+  acceptInjectedRules(sessionId: string, turn: number, ruleIds: readonly string[], versions: Record<string, number> = {}): boolean {
+    if (this.disposed || !this.registry.setInjectedRules(sessionId, turn, ruleIds, versions)) return false
     this.enqueue('injection_metric_failed', async () => {
       await this.updateWithRetry(current => ({
         ...current,
@@ -375,8 +375,8 @@ function toCaptureEvent(snapshot: TurnSnapshot, event: SessionEventLike): Captur
     : undefined
   let outcome: Outcome
   if (snapshot.correction && reasonKind === 'completed') outcome = 'corrected'
-  else if (reasonKind === 'error') outcome = 'failure'
-  else if (reasonKind === 'completed') outcome = snapshot.assistantOutcome ?? 'success'
+  else if (reasonKind === 'error' || snapshot.errorKind !== 'none') outcome = 'failure'
+  else if (reasonKind === 'completed') outcome = snapshot.assistantOutcome ?? 'partial'
   else outcome = 'partial'
   const errorKind = outcome === 'failure'
     ? snapshot.errorKind === 'none' ? 'unknown' : snapshot.errorKind
@@ -398,6 +398,7 @@ function toCaptureEvent(snapshot: TurnSnapshot, event: SessionEventLike): Captur
       workflowSteps: snapshot.workflowSteps,
     })),
     errorKind,
+    injectedRuleVersions: { ...snapshot.injectedRuleVersions },
     injectedRuleIds: [...snapshot.injectedRuleIds],
     preference: snapshot.preference,
   }

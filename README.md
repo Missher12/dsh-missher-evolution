@@ -1,11 +1,11 @@
 # Missher Evolution for DeepSeek Harness
 
 `dsh-missher-evolution` is a prebuilt Cordis bundle for DeepSeek Harness Desktop
-`>=0.1.8 <0.2.0`. It learns only bounded workflow categories, fixed preferences,
-closed outcomes, counters, hashes, and verified Chinese instructions. It does not
+`>=0.1.8 <0.2.0`. It collects bounded workflow categories, fixed preferences, closed outcomes,
+counters, hashes, and Chinese rule candidates for human review. It does not
 train model weights or rewrite Harness, the plugin, or user projects.
 
-Version `0.1.1` contributes approved Trial/Active rules through the Desktop
+Version `0.1.2` contributes approved Trial/Active rules through the Desktop
 Brain Hub. The Hub remains the only component that appends recall context, so
 MSE cannot create a second hidden prompt-injection path.
 
@@ -27,13 +27,13 @@ Build and verify a local release tarball from this directory:
 pnpm install --frozen-lockfile
 pnpm run build
 pnpm pack --pack-destination ./dist
-node scripts/verify-package.mjs ./dist/dsh-missher-evolution-0.1.1.tgz
+node scripts/verify-package.mjs ./dist/dsh-missher-evolution-0.1.2.tgz
 ```
 
 Install that tarball into the Harness profile that should use it:
 
 ```text
-dsh plugin --profile <profile> add <absolute-path-to>/dsh-missher-evolution-0.1.1.tgz
+dsh plugin --profile <profile> add <absolute-path-to>/dsh-missher-evolution-0.1.2.tgz
 ```
 
 Harness activates the bundle for that profile. Open Harness Settings and select
@@ -53,8 +53,11 @@ enabled `missher-evolution` Host entry. `node scripts/verify-package.mjs <tgz>`
 prints fixed JSON containing `ok`, file count, byte count, and SHA-256.
 
 Runtime verification should use the Settings snapshot: maintenance runs after
-startup, three matching independent sessions promote a Candidate to Trial, and
-three successful attributed Trial contributions promote it to Active. A later
+startup and three matching independent source sessions promote a Candidate to Trial.
+Only explicitly approved rules can contribute. Three successful attributed Trial
+contributions from distinct sessions outside the source sessions promote it to Active.
+A completed turn is an observation, not proof of correctness or causal improvement.
+Missing assistant results are partial; observed tool errors prevent positive evidence. A later
 matching direct user task contributes a `learned-rule` item to the Brain Hub;
 the one visible recall message keeps the `missher-brain` source identity.
 
@@ -76,6 +79,18 @@ metadata and the most recent in-memory foreground route, and is skipped when no
 route exists. Store, classifier, lock, or advisor failures are fail-open and do
 not reject a normal Harness step.
 
+## Review and revoke
+
+Every new and legacy rule starts unapproved unless an exact instruction hash was
+explicitly approved in this version. Settings shows category, task scope, rule text,
+source/trial session counts, failures, corrections and expiry. Approve or revoke one
+rule using its current revision and version; stale requests fail. Revoking approval
+stops future selection without deleting its evidence. It cannot retract context that
+was already delivered to a running task. Reapproval is available for unexpired
+Candidate/Trial/Active rules; suspended and retired rules cannot bypass negative evidence.
+Prepared batches recheck approval, version, expiry, enabled state and cancellation
+before accepting, and completion evidence is bound to the accepted rule version.
+
 ## Reset
 
 In Settings, choose Reset and complete both confirmations. The Remote requires
@@ -89,6 +104,12 @@ A reset creates and validates a backup before replacing state. Scheduled
 maintenance also creates a backup before applying expiry, retirement, or a
 bounded advisor rewrite. The Settings response identifies the reset backup;
 backup contents remain local under `$DSH_HOME/missher-evolution/backups/`.
+
+Settings can restore the most recent backup by typing `RESTORE` in the confirmation
+field. Restore checks the current revision, validates the backup, backs up the current
+state, preserves the enabled choice and clears all restored approvals. Remote `restore`
+also accepts an explicit validated local backup ID; paths are rejected. Corrupt-state
+backup recovery likewise clears approval.
 
 Do not edit or copy a live state directory between profiles. Stop Harness before
 performing any explicit offline backup or restore operation.
@@ -114,9 +135,24 @@ after Harness is stopped and any desired backup is verified.
   `./package.json` exports that the 0.2.x client-modules/typert loaders
   require, and resolves its mounted Remote namespace through the Remote
   service instead of the inject-gated `ctx.remote.<namespace>` property.
-- Version `0.1.1` requires the host-provided `missherBrain` service shipped by
-  DeepSeek Harness Desktop `0.3.8`; it intentionally does not fall back to a
-  private injection listener when that service is absent.
+- Version `0.1.2` starts local capture, settings and maintenance without `missherBrain`.
+  Contribution still requires the host-provided Brain Hub protocol v1. The provider
+  registers when the service becomes available and disposes with its service scope.
+  No private injection listener or Desktop modification is included.
+- Historical version ranges above are not a current full UI compatibility certification.
+  The local CLI install test and Cordis fixtures do not certify every original Harness UI.
+- Scope is the current DSH_HOME/profile state and exact task category, not a project
+  boundary. `projectKey` is not persisted or used to promise project isolation.
+  General rules do not automatically apply to other task categories.
+- At most one workflow, one guardrail and one rule per preference type are selected
+  per task category. This deterministic conflict policy is not semantic contradiction detection.
+- The 200-rule limit includes retired identities: new families stop being added at
+  capacity. Retired/suspended families do not silently revive; export or reset with
+  a verified backup for a fresh collection period.
+- Model advisor text changes clear approval and Trial success evidence. Advisor output
+  is a proposal requiring human review, not verified learning. Approved rules are not rewritten.
+- This maintenance build has local macOS Intel CLI and simulated lifecycle evidence;
+  no Windows native run, real model learning evaluation or Desktop UI acceptance was performed.
 - Only direct foreground user turns are learned; subagents, internal work,
   plugin messages, scheduled work, and tool continuations are filtered.
 - The first release recognizes a closed preference allowlist and does not copy

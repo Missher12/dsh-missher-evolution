@@ -177,12 +177,17 @@ function applyAdvisorDecision(
   const offeredVersion = offeredVersions.get(result.decision.ruleId)
   if (
     rule === undefined
+    || rule.approvedHash !== undefined && rule.approvedHash !== null
     || offeredVersion === undefined
     || rule.version !== offeredVersion
     || (rule.status !== 'candidate' && rule.status !== 'trial')
   ) return
   rule.instruction = result.decision.instruction
   rule.instructionHash = sha256(result.decision.instruction)
+  rule.approvedHash = null
+  rule.trialSessionHashes = []
+  rule.successes = 0
+  rule.opportunities = 0
   rule.version += 1
 }
 

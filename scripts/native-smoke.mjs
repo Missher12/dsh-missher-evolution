@@ -41,7 +41,7 @@ async function main() {
     } else {
       const marker = join(profileDir, 'node_modules', PACKAGE_NAME)
       await mkdir(marker, { recursive: true })
-      profileInstall = true
+      profileInstall = false
     }
     await mkdir(dirname(adjacentFile), { recursive: true })
     await writeFile(adjacentFile, 'preserve\n', 'utf8')
@@ -51,6 +51,10 @@ async function main() {
     await waitForMaintenance(first.remote)
     const startedAt = Date.now()
     for (let index = 0; index < 6; index += 1) {
+      if (index === 3) {
+        const trial = await first.remote.snapshot()
+        await first.remote.reviewRule({ ruleId: trial.rules[0].id, expectedVersion: trial.rules[0].version, expectedRevision: trial.revision, action: 'approve' })
+      }
       await completedCodingTurn(first.adapter, first.brainProvider, `native-${index}`, startedAt + index * 10)
     }
     const learned = await first.remote.snapshot()
@@ -97,7 +101,8 @@ async function main() {
     const adjacentDataPreserved = await exists(adjacentFile)
     const statePreserved = await exists(join(temporaryHome, PLUGIN_NAME, 'state.json'))
     const result = {
-      ok: profileInstall && capture && restart && injection && uninstall
+      mode: options.cli === undefined ? 'offline-runtime-fixture' : 'cli-install-with-runtime-fixture',
+      ok: (options.cli === undefined || profileInstall) && capture && restart && injection && uninstall
         && adjacentDataPreserved && statePreserved,
       platform: process.platform,
       arch: process.arch,
@@ -125,7 +130,7 @@ async function main() {
 function parseArgs(args) {
   const options = {
     platform: 'current',
-    archive: join(pluginRoot, 'dist', 'dsh-missher-evolution-0.1.1.tgz'),
+    archive: join(pluginRoot, 'dist', 'dsh-missher-evolution-0.1.2.tgz'),
     cli: undefined,
     profile: 'mse-smoke',
   }
@@ -264,6 +269,10 @@ async function completedCodingTurn(adapter, brainProvider, sessionId, occurredAt
     { agent: owner, callId: `call-${sessionId}`, name: 'terminal' },
     { isError: false },
   )
+  adapter.sessionEvent(owner.session, {
+    type: 'assistant/message', time: occurredAt,
+    data: { turn: 1, message: { content: [{ type: 'text', text: '已运行测试并核对结果。' }] } },
+  })
   adapter.sessionEvent(owner.session, {
     type: 'turn/end',
     time: occurredAt + 1,

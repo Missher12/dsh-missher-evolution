@@ -17,6 +17,7 @@ function user(text: string): HarnessUserMessage {
 function rule(): EvolutionRule {
   const instruction = '处理代码任务时先检查目标实现，再执行最小修改；完成后运行测试并核对真实结果。'
   return {
+    approvedHash: sha256(instruction),
     id: 'rule_verified', status: 'active', category: 'workflow', taskType: 'coding',
     workflowFamily: workflowFamily('coding', ['file_ops', 'shell']),
     workflowSteps: ['file_ops', 'shell'], observedWorkflowSignatures: [sha256('file_ops,shell')],

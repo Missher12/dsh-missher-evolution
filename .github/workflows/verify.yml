@@ -28,6 +28,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test
       - run: pnpm pack --pack-destination ./dist
-      - run: node scripts/verify-package.mjs ./dist/dsh-missher-evolution-0.1.1.tgz
+      - run: node scripts/verify-package.mjs ./dist/dsh-missher-evolution-0.1.2.tgz
       - if: runner.os != 'Linux'
-        run: node scripts/native-smoke.mjs --platform current --archive ./dist/dsh-missher-evolution-0.1.1.tgz
+        run: node scripts/native-smoke.mjs --platform current --archive ./dist/dsh-missher-evolution-0.1.2.tgz
