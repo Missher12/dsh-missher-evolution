@@ -27,3 +27,21 @@ scoped workflow rules and correction reminders, without claiming per-rule approv
 or measured model improvement. Upstream review and catalog rebuild are required
 before the plugin appears in DSH Market. Do not modify Desktop or its market cache
 to simulate publication. The PR link and current status will be appended after submission.
+
+## Published/submitted on 2026-09-08
+
+- Public source/tag commit: `97058d6e97bc46026d2f38694a39d1ce7fc5dc34`.
+- Four-platform package CI passed: https://github.com/Missher12/dsh-missher-evolution/actions/runs/34242121130
+- Release v0.7.0 is public; all eight initial assets were anonymously downloaded
+  and matched local bytes. The additional anonymous-checks.json records those results.
+- Marketplace PR: https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/4672
+  Submitted as one YAML entry; awaiting upstream review/merge and catalog rebuild.
+- Only the Harness distribution and necessary MIT core source were exported.
+  The unified MSE repository's visibility and other host adapters were unchanged.
+- The unified MSE task confirmed one source authority, one product version and two
+  distribution endpoints with different access. It owns future export automation;
+  this public repository must not independently evolve the rule algorithm.
+
+The first public-source CI run failed because type checking preceded generation
+of lib declarations. The next commit corrected CI ordering; no runtime changes or
+archive replacement were made. The tagged commit is the passing source revision.
