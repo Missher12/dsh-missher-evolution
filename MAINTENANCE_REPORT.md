@@ -1,3 +1,5 @@
+> Historical report for the unpublished 0.1.2 review branch. It does not describe the selected MSE 0.7.0 release; see PROJECT_CONTEXT.md and MARKETPLACE.md.
+
 # 经验规则插件 0.1.2 本地维护报告
 
 ## 兼容性结论

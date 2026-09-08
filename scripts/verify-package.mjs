@@ -6,12 +6,11 @@ import { isAbsolute, resolve } from 'node:path'
 import { gunzipSync } from 'node:zlib'
 import { pathToFileURL } from 'node:url'
 
+const expectedVersion = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version
+
 const REQUIRED_FILES = new Set([
   'package/package.json',
   'package/cordis.patch.yml',
-  'package/AGENT_INTEGRATION.md',
-  'package/OFFICIAL_DISTRIBUTION.md',
-  'package/TRADEMARKS.md',
   'package/lib/index.js',
   'package/lib/index.d.ts',
   'package/lib/client.js',
@@ -20,13 +19,20 @@ const REQUIRED_FILES = new Set([
   'package/lib/typert.host.d.ts',
   'package/lib/typert.remote-client.js',
   'package/lib/typert.remote-client.d.ts',
+  'package/lib/check-cli.js',
+  'package/lib/check-cli.d.ts',
 ])
 const OPTIONAL_FILES = new Set(['package/README.md', 'package/LICENSE'])
 const RUNTIME_CHUNK = /^package\/lib\/remote-contract-[A-Za-z0-9_-]+\.js$/u
+const DECLARATION_CHUNK = /^package\/lib\/schemas-[A-Za-z0-9_-]+\.d\.ts$/u
+const VERIFICATION_CHUNK = /^package\/lib\/verification(?:-files)?-[A-Za-z0-9_-]+\.(?:js|d\.ts)$/u
+const TYPES_CHUNK = /^package\/lib\/types-[A-Za-z0-9_-]+\.(?:js|d\.ts)$/u
 const TEXT_FILE = /(?:\.d\.ts|\.js|\.json|\.map|\.md|\.yml|\/LICENSE)$/u
 const FORBIDDEN_FILE = /(?:^|\/)(?:src|tests?|scripts?|state|backups?)(?:\/|\.|$)|(?:^|\/)(?:\.env(?:\.|$)|audit(?:\.|$))|\.(?:pem|key)$/iu
 const PRIVATE_KEY_VALUE = /-----BEGIN [^-\r\n]*PRIVATE KEY-----[\r\n]+[A-Za-z0-9+/=\r\n]{64,}/u
 const SECRET_VALUE = /(?:api[_-]?key|authorization|bearer|password|secret|token)\s*[:=]\s*["']?[A-Za-z0-9_./+\-=]{20,}/iu
+const ESCAPING_RUNTIME_IMPORT = /(?:from\s+|import\s*(?:\(\s*)?)["'](?:\.\.\/){2,}/u
+const ABSOLUTE_BUILD_PATH = /(?:\/Users\/|\/home\/|[A-Za-z]:\\)[^\r\n"']*Missher Evolution/u
 const MAX_ARCHIVE_BYTES = 10 * 1024 * 1024
 const MAX_EXPANDED_BYTES = 20 * 1024 * 1024
 
@@ -50,6 +56,9 @@ export async function verifyPackage(inputPath) {
       !REQUIRED_FILES.has(file)
       && !OPTIONAL_FILES.has(file)
       && !RUNTIME_CHUNK.test(file)
+      && !DECLARATION_CHUNK.test(file)
+      && !VERIFICATION_CHUNK.test(file)
+      && !TYPES_CHUNK.test(file)
     ) throw new Error(`unexpected_file:${file}`)
     if (FORBIDDEN_FILE.test(file)) throw new Error(`forbidden_file:${file}`)
   }
@@ -71,6 +80,7 @@ export async function verifyPackage(inputPath) {
     if (PRIVATE_KEY_VALUE.test(value) || SECRET_VALUE.test(value)) {
       throw new Error(`secret_marker:${file}`)
     }
+    if (file.startsWith('package/lib/')) assertSelfContainedText(file, value)
     if (file.endsWith('.map')) assertPortableSourceMap(file, value)
   }
 
@@ -79,6 +89,14 @@ export async function verifyPackage(inputPath) {
     files: files.length,
     bytes: archive.length,
     sha256: createHash('sha256').update(archive).digest('hex'),
+  }
+}
+
+export function assertSelfContainedText(file, value) {
+  if (ESCAPING_RUNTIME_IMPORT.test(value)) throw new Error(`escaping_runtime_import:${file}`)
+  if (ABSOLUTE_BUILD_PATH.test(value)) throw new Error(`absolute_build_path:${file}`)
+  if (file.endsWith('.js') && /(?:from\s*|import\s*\(|require\s*\()\s*["']zod(?:\/[^"']*)?["']/u.test(value)) {
+    throw new Error(`unbundled_runtime_dependency:${file}`)
   }
 }
 
@@ -165,7 +183,7 @@ function assertManifest(value) {
   }
   if (
     value.name !== 'dsh-missher-evolution'
-    || value.version !== '0.1.2'
+    || value.version !== expectedVersion
     || value.type !== 'module'
     || value.main !== 'lib/index.js'
     || value.types !== 'lib/index.d.ts'

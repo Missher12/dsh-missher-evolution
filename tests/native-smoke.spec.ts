@@ -6,19 +6,18 @@ const repositoryRoot = resolve(import.meta.dirname, '..')
 const pluginRoot = repositoryRoot
 
 describe('native platform acceptance contract', () => {
-  test('pins all supported package runners and native acceptance', () => {
+  test('covers supported package runners without claiming Desktop acceptance', () => {
     const workflowPath = resolve(repositoryRoot, '.github/workflows/verify.yml')
     expect(existsSync(workflowPath)).toBe(true)
     const workflow = readFileSync(workflowPath, 'utf8')
     for (const value of [
       'macos-15-intel',
+      'macos-15',
       'windows-2025',
-      'ubuntu-24.04',
       '22.19.0',
       '11.7.0',
       'pnpm run test',
       'verify-package.mjs',
-      'native-smoke.mjs',
     ]) expect(workflow).toContain(value)
     expect(workflow).not.toMatch(/audit\.jsonl|state\.json|missher-evolution\/backups/u)
   })
@@ -33,9 +32,16 @@ describe('native platform acceptance contract', () => {
       'injection',
       'uninstall',
       'adjacentDataPreserved',
+      'verificationRepair',
+      'actualCheckerExecutions',
+      'controlledLocalFixtureRepair',
     ]) expect(script).toContain(field)
     expect(script).toContain('dsh-missher-evolution')
     expect(script).toContain('missher-evolution')
+    expect(script).toContain('--runtime')
+    expect(script).toContain('ELECTRON_RUN_AS_NODE')
+    expect(script).toContain("ctx.provide('missherBrain'")
+    expect(script).toContain('brainProvider.prepare')
     expect(script).not.toMatch(/process\.env\.(?:API_KEY|TOKEN|PASSWORD)/u)
   })
 })

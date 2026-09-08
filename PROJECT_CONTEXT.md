@@ -1,79 +1,43 @@
-# dsh-missher-evolution Project Context
+# Project Context
 
-## Goal and ownership
+## 当前任务：MSE 0.7.0 公开插件分发与商店收录
 
-Independent experience-rule plugin: collect bounded candidates, review, try, activate,
-revoke and restore. No model training, source rewriting, memory database, external
-messaging or infinite optimization loop. Canonical repository:
-`https://github.com/Missher12/dsh-missher-evolution.git`.
+2026-09-08 用户明确选择升级当前 MSE 到 0.7.0，随后授权“上”DSH 商店。
+仅公开 Harness 插件及构建所需的 MIT TypeScript core，不改变整个统一仓库的可见性，
+不修改 Desktop 或其他宿主，不改变学习算法，不导出用户状态。
 
-## Verified baseline and workspace
+- 公开插件仓库：Missher12/dsh-missher-evolution（public）。
+- 统一源仓库：Missher12/missher-evolution-system（核验时 private）。
+- 统一源版本 0.7.0，SHA `48ddd5f4e0fd7fd9901724c088958c7849ac3a54`。
+- 工作树：dsh-missher-evolution-market；分支 codex/evolution-market-070。
+- 基于原本会话独立工作树 `3f48efd940d821e2b96adaf7fa518d6fa2a89a93`，保留该
+  codex/evolution-rule-review-20260906 分支，不覆盖其历史审核实现。
 
-- Baseline version 0.1.1, SHA `467a7ae3f5377090b0143e3679db710c67f2499a`.
-- Original checkout: `/Users/missher/Documents/ChatGPT/dsh-missher-evolution`,
-  branch `codex/plugin-distribution-policy`, initially clean; preserved.
-- Maintenance checkout: `/Users/missher/Documents/ChatGPT/dsh-missher-evolution-review`,
-  branch `codex/evolution-rule-review-20260906`.
-- No repository-local AGENTS.md was found; session instructions apply.
-- 0.1.2 is a local maintenance build, not a published release.
+## 架构与文件
 
-## Architecture and data flow
+`src/` 为统一 MSE 的 Harness adapter；`agent-product/src/` 为其 MIT core 源码快照。
+核心由构建器打入 lib，不要求安装另一个 SDK。公开根目录移动导致相对导入路径机械调整，
+不修改运行逻辑。SOURCE_PROVENANCE.json 记录源和公开文件哈希、允许的调整及原始提交。
+测试使用固定脱敏夹具；独立仓库不运行另一个宿主的 Python 对照实现。
 
-- `src/index.ts`: Cordis lifecycle, local store/Remote/maintenance and separately
-  scoped optional Brain Hub provider registration.
-- `adapter.ts`, `registry.ts`, `classifier.ts`: direct foreground turn observation;
-  only closed categories, hashes and outcomes reach persistent capture.
-- `lifecycle.ts`: Candidate -> Trial after three source sessions; explicitly approved
-  Trial -> Active after three distinct attributed successful sessions outside the
-  source sessions. Outcome counters are heuristics, not proof of efficacy.
-- `brain-provider.ts`: sole contribution via Brain Hub v1, acceptance revalidation
-  and version-bound attribution. No fallback context injection.
-- `store.ts`: strict bounded schema, private atomic files, revision/lock protection,
-  backups and explicit restore. State remains `$DSH_HOME/missher-evolution`.
-- `remote*.ts`, `typert*.ts`, `client/`: snapshot, enabled, reviewRule, reset, restore;
-  UI shows approval, scope, evidence and expiry with revision/version guards.
-- `AGENT_INTEGRATION.md`: packaged fresh-machine Agent runbook with exact identities,
-  install/preflight commands, Brain Hub boundary, Remote calls, privacy and acceptance.
-- `maintenance.ts`, `advisor.ts`: bounded maintenance and candidate text suggestions.
-  Rewrites clear approval and Trial evidence; approved text is not rewritten.
+`AGENT_INTEGRATION.md` 记录新电脑安装、激活与回滚边界。
+README 和原官方分发/商标政策保留；官方 0.7.0 tgz 原样发布，并单独提供政策和接入文档，
+避免重打包造成同版本不同内容。公开源码本地重建仅用于校验，不替换原始发布资产。
 
-## Compatibility
+## 版本与依赖限制
 
-Local capture, settings Remote and maintenance start without missherBrain. A host
-with the published standard services/compatible clients can manage local rules;
-contribution and therefore attributed Trial evidence require Brain Hub v1.
-Missing Brain Hub is explicitly shown by snapshot/UI. Dynamic service registration
-and cleanup were tested with actual Cordis and mocked host services. This is not a
-full original-Harness UI or Desktop native acceptance claim.
+0.7.0 与未发布的 0.1.2 审核版同名但 schema/API 不兼容。用户已选择统一 0.7.0；
+不能将旧 MAINTENANCE_REPORT 的 104 测试和人工批准能力作为当前版本保证。
+0.7.0 提供 snapshot/setEnabled/reset，不提供 reviewRule/restore；启动时使用 Brain Hub
+或已有原生生命周期召回。此分发任务不新增任何注入路线，也不保证人工逐条批准后晋升。
+共享数据目录是 DSH_HOME 级别，单独 Profile 不足以隔离状态。
 
-## Validation and progress
+商店来自 https://awesome-dsh-plugin.com/plugins.json 。需向其源码仓库提交单条 YAML，
+其中 tarball 指向公开 GitHub Release 的固定标签资产；公开发布不等于商店已收录。
+截至本轮开始商店没有本插件条目。本机 web 安装仍为 0.6.0，上次升级被 host_busy 阻止。
 
-See `MAINTENANCE_REPORT.md` for the upgrade checklist, issues, tests and limitations.
-104 tests pass across 15 files; Host and Client TypeScript checks pass.
-Mac Intel, Node 25.6.0, local Harness CLI 0.1.1-rc.2: archive installed and removed in
-an isolated DSH_HOME, with adjacent data and plugin state preserved. The same
-installed archive passed simulated six-turn lifecycle/restart/contribution checks.
-No real-model efficacy evaluation, Windows native execution or Desktop UI smoke.
+## 验证与交付
 
-## Safety and distribution
-
-Never import Hermes/Feishu state, write the Desktop repository or live profile,
-store raw conversations/tools/credentials, or duplicate Memory's storage purpose.
-MIT and existing OFFICIAL_DISTRIBUTION.md / TRADEMARKS.md remain unchanged.
-No push, tag or Release without an explicit release instruction.
-
-## Known limits and next maintenance
-
-- Profile-wide exact task-category scope; no project isolation promise.
-- Fixed categories and preference allowlist; deterministic conflict suppression,
-  not semantic conflict detection. Human review remains necessary.
-- At 200 identities new families are ignored. Retired/suspended identities do not
-  revive automatically; retain backups before a deliberate reset.
-- Revocation affects future contributions, not context already delivered.
-- Restore clears approvals, preserves enabled choice, and saves current state first.
-  Historical 0.1.1 readers do not accept the added optional state fields: use a
-  pre-upgrade backup for a binary downgrade, not the new state with old code.
-- Maintenance creates retained backups; automatic retention/pruning is not added.
-- Native smoke without --cli is explicitly an offline fixture and cannot prove install.
-- Reproduce from the lockfile with pnpm install --frozen-lockfile; this run reused
-  the original checkout's installed dependencies by a temporary read-only symlink.
+当前发布验证、最终公开 SHA、安装包 SHA-256、收录 PR 和状态记录于 MARKETPLACE.md。
+必须区分源码回归、隔离 CLI 安装/卸载、Desktop UI 与真实模型效果；禁止以离线测试冒称学习效果。
+继续维护统一源代码，再以有版本、有哈希的导出更新本仓库，避免两条独立算法实现分叉。

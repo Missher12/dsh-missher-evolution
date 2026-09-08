@@ -3,6 +3,7 @@ import { MaintenanceScheduler, type MaintenanceStore } from '../src/maintenance.
 import { createEmptyState } from '../src/store.js'
 import type { AdvisorResult } from '../src/advisor.js'
 import type { AuditEvent, EvolutionState } from '../src/types.js'
+import { canonicalRuleInstruction } from '../agent-product/src/lifecycle.js'
 
 class MemoryMaintenanceStore implements MaintenanceStore {
   state: EvolutionState
@@ -107,7 +108,7 @@ describe('MaintenanceScheduler', () => {
     expect(store.state.revision).toBe(0)
   })
 
-  test('isolates advisor rejection and applies a valid rewrite only to its offered version', async () => {
+  test('rejects an advisor rewrite that drops controlled semantic evidence', async () => {
     const state = createEmptyState(0)
     state.rules.push({
       id: 'rule_candidate', status: 'candidate', category: 'workflow', taskType: 'coding',
@@ -118,6 +119,10 @@ describe('MaintenanceScheduler', () => {
       lastEvidenceAt: 1, lastSuccessAt: null, expiresAt: 100_000,
       sessionHashes: ['d'.repeat(64)], version: 1, opportunities: 0,
       successes: 0, failures: 0, corrections: 0,
+      scope: { kind: 'project', keyHash: 'e'.repeat(64) },
+      semanticKey: 'f'.repeat(64), intentIds: ['bug_fix'],
+      constraintIds: ['no_fabricated_values'], verificationIds: ['test_suite'],
+      noveltyScore: 0.8,
     })
     const store = new MemoryMaintenanceStore(state)
     const rewrittenInstruction = '处理代码任务前先检查实现和测试；完成修改后运行对应测试并核对真实输出。'
@@ -134,7 +139,47 @@ describe('MaintenanceScheduler', () => {
       review: async () => decision,
     })
     await scheduler.runIfDue('timer')
-    expect(store.state.rules[0]).toMatchObject({ version: 2, instruction: rewrittenInstruction })
+    expect(store.state.rules[0]).toMatchObject({ version: 1 })
+    expect(store.state.rules[0]?.instruction).not.toBe(rewrittenInstruction)
+    expect(store.audits.some(event => event.kind === 'advisor_rule_rewritten')).toBe(false)
+  })
+
+  test('audits a valid semantic-preserving advisor rewrite by hash and version', async () => {
+    const state = createEmptyState(0)
+    const original = '处理代码任务时先检查目标，禁止伪造或猜测结果；完成后运行测试并核对真实结果。'
+    state.rules.push({
+      id: 'rule_candidate', status: 'candidate', category: 'workflow', taskType: 'coding',
+      workflowFamily: 'a'.repeat(64), workflowSteps: ['shell'],
+      observedWorkflowSignatures: ['b'.repeat(64)], preferenceId: null,
+      instruction: original, instructionHash: 'c'.repeat(64), confidence: 0.6, createdAt: 1,
+      lastEvidenceAt: 1, lastSuccessAt: null, expiresAt: 100_000,
+      sessionHashes: ['d'.repeat(64)], version: 1, opportunities: 0,
+      successes: 0, failures: 0, corrections: 0,
+      scope: { kind: 'project', keyHash: 'e'.repeat(64) },
+      semanticKey: 'f'.repeat(64), intentIds: ['bug_fix'],
+      constraintIds: ['no_fabricated_values'], verificationIds: ['test_suite'],
+      noveltyScore: 0.8,
+    })
+    const store = new MemoryMaintenanceStore(state)
+    const rewritten = canonicalRuleInstruction(state.rules[0]!)
+    const scheduler = new MaintenanceScheduler({
+      store, now: () => 100, intervalHours: 24,
+      review: async () => ({
+        status: 'accepted',
+        decision: { ruleId: 'rule_candidate', action: 'rewrite', instruction: rewritten },
+      }),
+    })
+
+    await scheduler.runIfDue('timer')
+
+    expect(store.state.rules[0]).toMatchObject({ version: 2, instruction: rewritten })
+    expect(store.audits.find(event => event.kind === 'advisor_rule_rewritten')).toMatchObject({
+      ruleId: 'rule_candidate',
+      previousInstructionHash: 'c'.repeat(64),
+      instructionHash: expect.stringMatching(/^[0-9a-f]{64}$/u),
+      previousVersion: 1,
+      version: 2,
+    })
   })
 
   test('aborts advisor work and waits for in-flight settlement on dispose', async () => {

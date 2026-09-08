@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { advise, type AdvisorRoute, type ModelRunner } from '../src/advisor.js'
-import { sha256, workflowFamily } from '../src/lifecycle.js'
+import { sha256, workflowFamily, canonicalRuleInstruction } from '../src/lifecycle.js'
 import type { EvolutionRule } from '../src/types.js'
 
 function candidate(overrides: Partial<EvolutionRule> = {}): EvolutionRule {
@@ -50,7 +50,10 @@ describe('bounded advisor', () => {
     })
     expect(result).toMatchObject({ status: 'accepted', decision: { action: 'keep' } })
     expect(seen).toHaveLength(1)
-    expect(JSON.stringify(seen)).not.toMatch(/prompt|response|\/Users\/|https?:|目标实现/u)
+    const serialized = JSON.stringify(seen)
+    expect(serialized).toContain('目标实现')
+    expect(serialized).not.toMatch(/prompt|response|\/Users\/|https?:/u)
+    expect(serialized).not.toContain('sessionHashes')
   })
 
   test('rejects fenced JSON, oversized output and unoffered ids', async () => {
@@ -67,10 +70,11 @@ describe('bounded advisor', () => {
   })
 
   test('accepts one actionable Chinese rewrite and rejects unsafe text', async () => {
-    const valid = await advise([candidate()], route, async () => JSON.stringify({
+    const structured = candidate({ verificationIds: ['test_suite'] })
+    const valid = await advise([structured], route, async () => JSON.stringify({
       ruleId: 'rule_candidate',
       action: 'rewrite',
-      instruction: '处理代码任务前先检查相关实现和测试；修改后运行对应测试并核对真实输出。',
+      instruction: canonicalRuleInstruction(structured),
     }))
     expect(valid).toMatchObject({ status: 'accepted', decision: { action: 'rewrite' } })
 

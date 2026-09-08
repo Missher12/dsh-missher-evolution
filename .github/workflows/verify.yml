@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15-intel, windows-2025, ubuntu-24.04]
+        os: [macos-15-intel, macos-15, windows-2025, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -26,8 +26,8 @@ jobs:
           node-version: 22.19.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc -p tsconfig.json --noEmit
+      - run: pnpm exec tsc -p tsconfig.client.json --noEmit
       - run: pnpm run test
       - run: pnpm pack --pack-destination ./dist
-      - run: node scripts/verify-package.mjs ./dist/dsh-missher-evolution-0.1.2.tgz
-      - if: runner.os != 'Linux'
-        run: node scripts/native-smoke.mjs --platform current --archive ./dist/dsh-missher-evolution-0.1.2.tgz
+      - run: node scripts/verify-package.mjs ./dist/dsh-missher-evolution-0.7.0.tgz

@@ -37,7 +37,6 @@ function emptyState(now = 0): EvolutionState {
 function activeRule(overrides: Partial<EvolutionRule> = {}): EvolutionRule {
   const now = 1_000
   return {
-    approvedHash: sha256('active instruction'),
     id: 'rule_active',
     status: 'active',
     category: 'workflow',
@@ -73,12 +72,11 @@ describe('deterministic lifecycle', () => {
     expect(state.rules[0]?.status).toBe('trial')
   })
 
-  test('promotes a trial only after three attributed successful injections', () => {
+  test('three successful injections still require controls before promotion', () => {
     let state = emptyState(0)
     for (const id of ['a', 'b', 'c']) {
       state = capture(state, event({ sessionHash: sha256(id), taskHash: sha256(`t-${id}`) })).state
     }
-    state.rules[0]!.approvedHash = state.rules[0]!.instructionHash
     const ruleId = state.rules[0]?.id
     expect(ruleId).toBeDefined()
     for (const id of ['d', 'e', 'f']) {
@@ -86,6 +84,16 @@ describe('deterministic lifecycle', () => {
         sessionHash: sha256(id),
         taskHash: sha256(`t-${id}`),
         injectedRuleIds: [ruleId as string],
+        outcomeEvidence: { quality: 'verified', signals: ['verification_passed'] },
+        experimentAssignments: [{ ruleId: ruleId as string, arm: 'treatment', instructionHash: state.rules[0]!.instructionHash }],
+      })).state
+    }
+    expect(state.rules.find(rule => rule.id === ruleId)?.status).toBe('trial')
+    for (const id of ['control-a', 'control-b']) {
+      state = capture(state, event({
+        sessionHash: sha256(id), taskHash: sha256(id), outcome: 'failure', errorKind: 'none',
+        outcomeEvidence: { quality: 'contradicted', signals: ['verification_failed'] },
+        experimentAssignments: [{ ruleId: ruleId as string, arm: 'control', instructionHash: state.rules[0]!.instructionHash }],
       })).state
     }
     expect(state.rules.find(rule => rule.id === ruleId)).toMatchObject({
@@ -114,8 +122,7 @@ describe('deterministic lifecycle', () => {
   test('retires expired and low-value rules during maintenance', () => {
     const expired = activeRule({ expiresAt: DAY, lastEvidenceAt: DAY })
     const noTool = activeRule({
-      approvedHash: sha256('active instruction'),
-    id: 'rule_no_tool',
+      id: 'rule_no_tool',
       taskType: 'general',
       workflowSteps: [],
       workflowFamily: workflowFamily('general', []),
@@ -156,8 +163,7 @@ describe('deterministic lifecycle', () => {
   test('selects exact rules first and bounds count and context', () => {
     const exact = activeRule({ id: 'rule_exact' })
     const global = activeRule({
-      approvedHash: sha256('active instruction'),
-    id: 'rule_global',
+      id: 'rule_global',
       category: 'general',
       taskType: 'general',
       workflowFamily: workflowFamily('general', ['shell']),
@@ -166,8 +172,7 @@ describe('deterministic lifecycle', () => {
       instruction: '处理通用任务时先检查目标和约束，再执行限定步骤；完成后核对结果与请求是否一致。',
     })
     const preference = activeRule({
-      approvedHash: sha256('active instruction'),
-    id: 'rule_preference',
+      id: 'rule_preference',
       category: 'preference',
       preferenceId: 'respond_simplified_chinese',
       instruction: '使用简体中文回答；发送前检查正文语言并确认没有无必要的英文段落。',

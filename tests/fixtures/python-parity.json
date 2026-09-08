@@ -1,0 +1,229 @@
+{
+  "candidateThreshold": {
+    "harnessStatuses": [
+      "candidate",
+      "candidate",
+      "trial"
+    ],
+    "pythonStatuses": [
+      "candidate",
+      "trial",
+      "trial"
+    ]
+  },
+  "documentedDifferences": [
+    {
+      "harness": "three independent sessions",
+      "id": "candidate_session_threshold",
+      "python": "two independent sessions",
+      "reason": "The approved Harness design uses a stricter promotion threshold."
+    },
+    {
+      "harness": "none enum",
+      "id": "empty_error_vocabulary",
+      "python": "empty string",
+      "reason": "Harness state uses a closed nonempty error vocabulary."
+    },
+    {
+      "harness": "POSIX and Windows path detection",
+      "id": "windows_path_privacy",
+      "python": "POSIX path detection",
+      "reason": "The cross-platform plugin rejects both operating-system path forms."
+    }
+  ],
+  "errors": [
+    {
+      "expected": "none",
+      "input": ""
+    },
+    {
+      "expected": "timeout",
+      "input": "deadline exceeded"
+    },
+    {
+      "expected": "permission",
+      "input": "permission denied"
+    },
+    {
+      "expected": "validation",
+      "input": "schema invalid"
+    },
+    {
+      "expected": "transport",
+      "input": "socket closed"
+    },
+    {
+      "expected": "tool_error",
+      "input": "boom"
+    }
+  ],
+  "generatedBy": "current-python-mse-pure-functions",
+  "prompts": [
+    {
+      "expected": "coding",
+      "input": "请检查 TypeScript 构建并修复测试"
+    },
+    {
+      "expected": "browser",
+      "input": "请打开浏览器检查当前网页"
+    },
+    {
+      "expected": "general",
+      "input": "整理一份简短说明"
+    },
+    {
+      "expected": "research",
+      "input": "请调研并搜索权威资料"
+    }
+  ],
+  "schemaVersion": 1,
+  "selection": {
+    "expectedRuleIds": [
+      "rule_exact_high",
+      "rule_exact_low",
+      "rule_global"
+    ],
+    "rules": [
+      {
+        "confidence": 0.9,
+        "id": "rule_exact_high",
+        "taskType": "coding"
+      },
+      {
+        "confidence": 0.99,
+        "id": "rule_global",
+        "taskType": "general"
+      },
+      {
+        "confidence": 0.8,
+        "id": "rule_exact_low",
+        "taskType": "coding"
+      }
+    ]
+  },
+  "sensitive": [
+    {
+      "expected": true,
+      "id": "c1"
+    },
+    {
+      "expected": true,
+      "id": "c2"
+    },
+    {
+      "expected": true,
+      "id": "c3"
+    },
+    {
+      "expected": true,
+      "id": "c4"
+    },
+    {
+      "expected": false,
+      "id": "c5"
+    }
+  ],
+  "tools": [
+    {
+      "expected": "file_ops",
+      "input": "apply_patch"
+    },
+    {
+      "expected": "browser",
+      "input": "browser.open"
+    },
+    {
+      "expected": "shell",
+      "input": "terminal.exec"
+    },
+    {
+      "expected": "calendar",
+      "input": "calendar.create"
+    },
+    {
+      "expected": "other",
+      "input": "unknown"
+    }
+  ],
+  "trialLifecycle": {
+    "expectedStatuses": [
+      "trial",
+      "trial",
+      "active"
+    ]
+  },
+  "workflows": [
+    {
+      "family": "638f2497db9d867f5f93adb723e42d925277245d91f5e6d9088e17329a00b3be",
+      "projection": {
+        "categories": [
+          "file_ops",
+          "shell"
+        ],
+        "no_tool": false,
+        "task_type": "coding",
+        "transitions": [
+          "file_ops>shell",
+          "shell>file_ops"
+        ]
+      },
+      "steps": [
+        "shell",
+        "file_ops",
+        "shell"
+      ],
+      "taskType": "coding"
+    },
+    {
+      "family": "63351110aee96fa1fa98cce4fac478c3c23184f3a95136a8a3099c0f8ab96179",
+      "projection": {
+        "categories": [
+          "file_ops",
+          "shell"
+        ],
+        "no_tool": false,
+        "task_type": "coding",
+        "transitions": [
+          "shell>file_ops"
+        ]
+      },
+      "steps": [
+        "other",
+        "shell",
+        "other",
+        "file_ops"
+      ],
+      "taskType": "coding"
+    },
+    {
+      "family": "04e5b831492da018f53d25e498e76685345c9a769eed869d0c889ba655f4f217",
+      "projection": {
+        "categories": [],
+        "no_tool": true,
+        "task_type": "general",
+        "transitions": []
+      },
+      "steps": [],
+      "taskType": "general"
+    },
+    {
+      "family": "cb9442c81af95f06997b0d6011ad69707661688ee6952054ab79e03b0f95f45b",
+      "projection": {
+        "categories": [
+          "browser",
+          "research"
+        ],
+        "no_tool": false,
+        "task_type": "research",
+        "transitions": [
+          "research>browser"
+        ]
+      },
+      "steps": [
+        "research",
+        "browser"
+      ],
+      "taskType": "research"
+    }
+  ]
+}

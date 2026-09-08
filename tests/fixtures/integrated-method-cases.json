@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "provenance": "independent-synthetic-contract-cases",
+  "cases": [
+    {"id":"date-null", "methodId":"copy-source-date-v1", "source":[{"id":"a","value":null}], "artifact":[{"id":"a","value":"2026-09-08"}], "expected":[{"id":"a","value":null}]},
+    {"id":"date-wrong", "methodId":"copy-source-date-v1", "source":[{"id":"a","value":"2026-08-17"}], "artifact":[{"id":"a","value":"2026-09-08"}], "expected":[{"id":"a","value":"2026-08-17"}]},
+    {"id":"date-today-is-real", "methodId":"copy-source-date-v1", "source":[{"id":"a","value":"2026-09-08"}], "artifact":[{"id":"a","value":"2026-09-08"}], "expected":[{"id":"a","value":"2026-09-08"}]},
+    {"id":"date-reordered", "methodId":"copy-source-date-v1", "source":[{"id":"a","value":null},{"id":"b","value":"2026-08-17"}], "artifact":[{"id":"b","value":null},{"id":"a","value":"2026-09-08"}], "expected":[{"id":"b","value":"2026-08-17"},{"id":"a","value":null}]},
+    {"id":"date-wrong-identity", "methodId":"copy-source-date-v1", "source":[{"id":"a","value":null}], "artifact":[{"id":"b","value":"2026-09-08"}], "expected":[{"id":"b","value":"2026-09-08"}]},
+    {"id":"date-invalid-calendar", "methodId":"copy-source-date-v1", "source":[{"id":"a","value":"2026-02-30"}], "artifact":[{"id":"a","value":null}], "expected":[{"id":"a","value":null}]},
+    {"id":"null-number", "methodId":"preserve-null-v1", "source":[{"id":"a","value":null}], "artifact":[{"id":"a","value":0}], "expected":[{"id":"a","value":null}]},
+    {"id":"null-empty-string", "methodId":"preserve-null-v1", "source":[{"id":"a","value":null}], "artifact":[{"id":"a","value":""}], "expected":[{"id":"a","value":null}]},
+    {"id":"null-bool", "methodId":"preserve-null-v1", "source":[{"id":"a","value":null}], "artifact":[{"id":"a","value":false}], "expected":[{"id":"a","value":null}]},
+    {"id":"known-value-not-owned", "methodId":"preserve-null-v1", "source":[{"id":"a","value":6}], "artifact":[{"id":"a","value":7}], "expected":[{"id":"a","value":7}]},
+    {"id":"null-already-valid", "methodId":"preserve-null-v1", "source":[{"id":"a","value":null}], "artifact":[{"id":"a","value":null}], "expected":[{"id":"a","value":null}]},
+    {"id":"null-wrong-identity", "methodId":"preserve-null-v1", "source":[{"id":"a","value":null}], "artifact":[{"id":"b","value":6}], "expected":[{"id":"b","value":6}]},
+    {"id":"empty-source", "methodId":"preserve-null-v1", "source":[], "artifact":[{"id":"a","value":6}], "expected":[{"id":"a","value":6}]}
+  ]
+}

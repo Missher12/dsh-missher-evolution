@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context, type Fiber } from '@deepseek-ai/cordis'
@@ -10,16 +10,16 @@ import type {
   MseAdapter,
   PreStepDecision,
 } from '../src/adapter.js'
-import type { BrainProviderLike } from '../src/brain-provider.js'
 import type { MissherEvolutionRemote } from '../src/remote.js'
+import type { BrainProviderLike } from '../src/brain-provider.js'
 import type { PluginConfig } from '../src/types.js'
 
 interface MountedPlugin {
   ctx: Context
   fiber: Fiber
   adapter: MseAdapter
-  brainProvider: BrainProviderLike
   remote: MissherEvolutionRemote
+  brain: BrainProviderLike
 }
 
 const roots: string[] = []
@@ -36,7 +36,7 @@ async function mountBuiltPlugin(
   config: PluginConfig = {},
 ): Promise<MountedPlugin> {
   const ctx = new Context()
-  let brainProvider: BrainProviderLike | undefined
+  let brain: BrainProviderLike | undefined
   ctx.provide('agents', {})
   ctx.provide('tools', {})
   ctx.provide('dshHomePath', (...segments: string[]) => join(profileRoot, ...segments))
@@ -47,8 +47,8 @@ async function mountBuiltPlugin(
   })
   ctx.provide('missherBrain', {
     register(provider: BrainProviderLike) {
-      brainProvider = provider
-      return () => { brainProvider = undefined }
+      brain = provider
+      return () => { if (brain === provider) brain = undefined }
     },
   })
   const fiber = ctx.plugin(plugin, {
@@ -57,13 +57,13 @@ async function mountBuiltPlugin(
     maxInjectedRules: config.maxInjectedRules ?? 4,
   })
   await fiber.await()
-  if (brainProvider === undefined) throw new Error('brain provider was not registered')
+  if (brain === undefined) throw new Error('brain_provider_missing')
   const result = {
     ctx,
     fiber,
     adapter: (ctx as Context & { missherEvolutionCore: MseAdapter }).missherEvolutionCore,
-    brainProvider,
     remote: (ctx as Context & { missherEvolution: MissherEvolutionRemote }).missherEvolution,
+    brain,
   }
   mounted.push(result)
   return result
@@ -93,54 +93,93 @@ function agent(sessionId: string): AgentLike {
   }
 }
 
-async function completedCodingTurn(
-  adapter: MseAdapter,
-  brainProvider: BrainProviderLike,
+async function completedScopedTurn(
+  target: Pick<MountedPlugin, 'adapter' | 'brain'>,
   sessionId: string,
   occurredAt: number,
-): Promise<PreStepDecision> {
+  reason: 'completed' | 'error' = 'completed',
+): Promise<{ decision: PreStepDecision, offered: number }> {
   const owner = agent(sessionId)
-  const prompt = user('修复 TypeScript 测试并运行目标测试核对结果')
+  const prompt = user('小红书没有发布时间时不要写成今天，必须保持未知并核对来源字段。')
   const entered = { kind: 'enter' as const, messages: [prompt] }
-  const decision = await adapter.preStep({
+  const decision = await target.adapter.preStep({
     agent: owner,
     messages: [prompt],
     turn: 1,
     step: 1,
     signal: new AbortController().signal,
   }, async () => entered)
-  const prepared = await brainProvider.prepare({
-    projectKey: 'a'.repeat(64),
+  const batch = await target.brain.prepare({
+    projectKey: 'media-project',
     sessionId,
     turn: 1,
-    query: '修复 TypeScript 测试并运行目标测试核对结果',
+    query: String((prompt.content[0] as { text: string }).text),
     signal: new AbortController().signal,
   })
-  if (prepared.items.length > 0) {
-    await prepared.accept(prepared.items.map(item => item.handle))
-  } else {
-    await prepared.cancel()
-  }
+  if (batch.items.length > 0) await batch.accept(batch.items.map(item => item.handle))
+  else await batch.cancel()
   owner.session.events.push({
     type: 'tool/call',
     time: occurredAt,
     data: { turn: 1, step: 1, callId: `call-${sessionId}`, name: 'terminal' },
   })
-  adapter.toolsResult(
+  target.adapter.toolsResult(
     { agent: owner, callId: `call-${sessionId}`, name: 'terminal' },
-    { isError: false },
+    { isError: reason === 'error', ...(reason === 'error' ? { error: { name: 'TaskError' } } : {}) },
   )
-  adapter.sessionEvent(owner.session, {
-    type: 'assistant/message', time: occurredAt,
-    data: { turn: 1, message: { content: [{ type: 'text', text: '已运行测试并核对结果。' }] } },
-  })
-  adapter.sessionEvent(owner.session, {
+  target.adapter.sessionEvent(owner.session, {
     type: 'turn/end',
     time: occurredAt + 1,
-    data: { turn: 1, reason: { kind: 'completed' } },
+    data: { turn: 1, reason: { kind: reason } },
   })
-  await adapter.drain()
-  return decision
+  await target.adapter.drain()
+  return { decision, offered: batch.items.length }
+}
+
+async function completedCausalTurn(
+  target: Pick<MountedPlugin, 'adapter' | 'brain'>,
+  sessionId: string,
+  occurredAt: number,
+): Promise<{ decision: PreStepDecision, treatment: boolean }> {
+  const owner = agent(sessionId)
+  const prompt = user('小红书没有发布时间时不要写成今天，必须保持未知并核对来源字段。')
+  const entered = { kind: 'enter' as const, messages: [prompt] }
+  const decision = await target.adapter.preStep({
+    agent: owner,
+    messages: [prompt],
+    turn: 1,
+    step: 1,
+    signal: new AbortController().signal,
+  }, async () => entered)
+  const batch = await target.brain.prepare({
+    projectKey: 'media-project',
+    sessionId,
+    turn: 1,
+    query: String((prompt.content[0] as { text: string }).text),
+    signal: new AbortController().signal,
+  })
+  const treatment = batch.items.length > 0
+  if (treatment) await batch.accept(batch.items.map(item => item.handle))
+  else await batch.accept([])
+  owner.session.events.push({
+    type: 'tool/call',
+    time: occurredAt,
+    data: { turn: 1, step: 1, callId: `call-${sessionId}`, name: 'terminal' },
+  })
+  target.adapter.toolsResult(
+    { agent: owner, callId: `call-${sessionId}`, name: 'terminal' },
+    {
+      isError: !treatment,
+      ...(!treatment ? { error: { name: 'TaskError' } } : {}),
+    },
+  )
+  target.adapter.sessionEvent(owner.session, {
+    type: 'turn/end',
+    time: occurredAt + 1,
+    data: { turn: 1, reason: { kind: treatment ? 'completed' : 'error' } },
+  })
+  await target.adapter.drain()
+  return { decision, treatment }
 }
 
 afterEach(async () => {
@@ -152,6 +191,14 @@ afterEach(async () => {
 })
 
 describe('built Harness bundle integration', () => {
+  test('contains no runtime import that escapes to the SDK source tree', async () => {
+    const lib = new URL('../lib/', import.meta.url)
+    const files = (await readdir(lib)).filter(file => /\.(?:js|d\.ts)$/u.test(file))
+    const output = (await Promise.all(files.map(file => readFile(new URL(file, lib), 'utf8')))).join('\n')
+    expect(output).not.toMatch(/(?:from\s+|import\s*\()["']\.\.\/\.\.\/agent-product/u)
+    expect(output).not.toMatch(/(?:\/Users\/|[A-Za-z]:\\)[^\r\n"']*Missher Evolution/u)
+  })
+
   test('uses config only for first install and persists the settings remote choice', async () => {
     const profileRoot = await temporaryProfile()
     const first = await mountBuiltPlugin(profileRoot, { enabled: false })
@@ -171,7 +218,7 @@ describe('built Harness bundle integration', () => {
     expect((await reopened.remote.snapshot()).enabled).toBe(true)
   })
 
-  test('promotes repeated evidence, reloads it, and contributes through the Brain provider', async () => {
+  test('promotes only after causal uplift, persists scope, and recalls through Brain Hub', async () => {
     const profileRoot = await temporaryProfile()
     const first = await mountBuiltPlugin(profileRoot)
     await vi.waitFor(async () => {
@@ -179,50 +226,52 @@ describe('built Harness bundle integration', () => {
     })
     const startedAt = Date.now()
     for (let index = 0; index < 3; index += 1) {
-      const decision = await completedCodingTurn(
-        first.adapter, first.brainProvider, `candidate-${index}`, startedAt + index * 10,
-      )
-      expect(decision.kind).toBe('enter')
+      const turn = await completedScopedTurn(first, `candidate-${index}`, startedAt + index * 10)
+      expect(turn.decision.kind).toBe('enter')
+      expect(turn.offered).toBe(0)
     }
-    const trial = await first.remote.snapshot()
-    expect(trial.counters.trial).toBe(1)
-    await first.remote.reviewRule({ ruleId: trial.rules[0]!.id, expectedVersion: trial.rules[0]!.version!, expectedRevision: trial.revision, action: 'approve' })
+    expect((await first.remote.snapshot()).counters.trial).toBe(1)
 
-    for (let index = 0; index < 3; index += 1) {
-      const decision = await completedCodingTurn(
-        first.adapter, first.brainProvider, `trial-${index}`, startedAt + 100 + index * 10,
-      )
-      expect(decision.kind).toBe('enter')
-      if (decision.kind !== 'enter') throw new Error('expected enter')
-      expect(decision.messages).toHaveLength(1)
+    let treatments = 0
+    let controls = 0
+    for (let index = 0; index < 100 && (treatments < 3 || controls < 2); index += 1) {
+      const turn = await completedCausalTurn(first, `trial-${index}`, startedAt + 100 + index * 10)
+      expect(turn.decision.kind).toBe('enter')
+      if (turn.treatment) treatments += 1
+      else controls += 1
     }
+    expect(treatments).toBeGreaterThanOrEqual(3)
+    expect(controls).toBeGreaterThanOrEqual(2)
     expect((await first.remote.snapshot()).counters.active).toBe(1)
     await disposeMounted(first)
 
     const reopened = await mountBuiltPlugin(profileRoot)
-    await reopened.adapter.preStep({
+    const restartPrompt = user('核对小红书发布时间来源字段。')
+    const decision = await reopened.adapter.preStep({
       agent: agent('restart'),
-      messages: [user('修复 TypeScript 测试并运行目标测试核对结果')],
+      messages: [restartPrompt],
       turn: 1,
       step: 1,
       signal: new AbortController().signal,
-    }, async () => ({
-      kind: 'enter',
-      messages: [user('修复 TypeScript 测试并运行目标测试核对结果')],
-    }))
-    const prepared = await reopened.brainProvider.prepare({
-      projectKey: 'a'.repeat(64),
+    }, async () => ({ kind: 'enter', messages: [restartPrompt] }))
+    expect(decision.kind).toBe('enter')
+    if (decision.kind !== 'enter') throw new Error('expected enter')
+    expect(decision.messages).toEqual([restartPrompt])
+    const recalled = await reopened.brain.prepare({
+      projectKey: 'media-project',
       sessionId: 'restart',
       turn: 1,
-      query: '修复 TypeScript 测试并运行目标测试核对结果',
+      query: '核对小红书发布时间来源字段。',
       signal: new AbortController().signal,
     })
-    expect(prepared.items[0]).toMatchObject({
-      providerId: 'evolution', kind: 'learned-rule', reference: expect.stringMatching(/^mse:/u),
-    })
+    expect(recalled.items).toHaveLength(1)
+    expect(recalled.items[0]?.text).toContain('发布时间')
+    await recalled.accept(recalled.items.map(item => item.handle))
+    await reopened.adapter.drain()
     const state = await readFile(join(profileRoot, 'missher-evolution', 'state.json'), 'utf8')
-    expect(state).not.toContain('修复 TypeScript 测试并运行目标测试核对结果')
-  })
+    expect(state).not.toContain('小红书没有发布时间时不要写成今天')
+    expect(state).not.toContain('media-project')
+  }, 15_000)
 
   test('recovers from a valid backup and fails open when the state root is unavailable', async () => {
     const profileRoot = await temporaryProfile()

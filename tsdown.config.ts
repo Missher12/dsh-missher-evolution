@@ -46,6 +46,7 @@ function hostConfig(): UserConfig {
       index: 'src/index.ts',
       'typert.host': 'src/typert.host.ts',
       'typert.remote-client': 'src/typert.remote-client.ts',
+      'check-cli': 'src/check-cli.ts',
     },
     outDir: 'lib',
     format: ['esm'],
@@ -54,6 +55,7 @@ function hostConfig(): UserConfig {
     fixedExtension: false,
     dts: true,
     clean: true,
+    deps: { alwaysBundle: ['zod'], onlyBundle: ['zod'], dts: { alwaysBundle: [], neverBundle: ['zod'] } },
     plugins: [standardDecoratorPlugin()],
   }
 }
@@ -68,8 +70,11 @@ function clientConfig(): UserConfig {
     dts: false,
     sourcemap: true,
     clean: false,
-    external: [...CLIENT_EXTERNALS],
-    noExternal: (id: string) => CLIENT_EXTERNALS.includes(id as never) ? undefined : true,
+    deps: {
+      neverBundle: [...CLIENT_EXTERNALS],
+      alwaysBundle: ['zod'],
+      onlyBundle: ['zod'],
+    },
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ?? 'production'),
       'import.meta.env.MODE': JSON.stringify(process.env.NODE_ENV ?? 'production'),

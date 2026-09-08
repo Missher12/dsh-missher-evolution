@@ -1,10 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import {
-  RestoreRequestSchema,
-  type RestoreRequest,
-  ReviewRuleRequestSchema,
-  type ReviewRuleRequest,
   ResetRequestSchema,
   SetEnabledRequestSchema,
   type EvolutionSnapshot,
@@ -14,11 +10,11 @@ import {
 } from './remote-contract.js'
 import type { EvolutionStore } from './store.js'
 import type { AuditEvent, EvolutionState } from './types.js'
+import { learningDiagnostics } from './diagnostics.js'
 
 const LOCK_RETRY_DELAYS_MS = [10, 20, 40, 80, 160, 320, 640, 1_000] as const
 
 export interface RemoteStore {
-  restore(input: RestoreRequest): Promise<EvolutionState>
   load(): Promise<EvolutionState>
   update(
     expectedRevision: number,
@@ -32,7 +28,6 @@ export interface RemoteStore {
 }
 
 export interface MissherEvolutionRemoteOptions {
-  contributionAvailable?: () => boolean
   now?: () => number
   warn?: (code: 'remote_audit_failed') => void
 }
@@ -44,7 +39,6 @@ declare module '@deepseek-ai/cordis' {
 }
 
 export class MissherEvolutionRemote extends TypertRemoteService {
-  private readonly contributionAvailable: () => boolean
   private readonly store: RemoteStore
   private readonly now: () => number
   private readonly warn: (code: 'remote_audit_failed') => void
@@ -55,40 +49,14 @@ export class MissherEvolutionRemote extends TypertRemoteService {
     options: MissherEvolutionRemoteOptions = {},
   ) {
     super(ctx, 'missherEvolution')
-    this.contributionAvailable = options.contributionAvailable ?? (() => false)
     this.store = store
     this.now = options.now ?? Date.now
     this.warn = options.warn ?? (() => undefined)
   }
 
-  @Remote('restore')
-  async restore(input: RestoreRequest): Promise<EvolutionSnapshot> {
-    const request = RestoreRequestSchema.parse(input)
-    const state = await retryLockBusy(() => this.store.restore(request))
-    await this.audit({ schemaVersion: 1, at: this.now(), kind: 'state_reset', reason: 'manual' })
-    return this.view(state)
-  }
-
-  @Remote('reviewRule')
-  async reviewRule(input: ReviewRuleRequest): Promise<EvolutionSnapshot> {
-    const request = ReviewRuleRequestSchema.parse(input)
-    const state = await retryLockBusy(() => this.store.update(request.expectedRevision, current => {
-      const rule = current.rules.find(item => item.id === request.ruleId)
-      if (rule === undefined || rule.version !== request.expectedVersion) throw new Error('rule_conflict')
-      if (request.action === 'approve' && (rule.status === 'retired' || rule.status === 'suspended'
-        || rule.expiresAt !== null && rule.expiresAt <= this.now())) throw new Error('rule_ineligible')
-      rule.approvedHash = request.action === 'approve' ? rule.instructionHash : null
-      rule.version += 1
-      return current
-    }))
-    await this.audit({ schemaVersion: 1, at: this.now(), kind: 'rule_transitioned',
-      ruleId: request.ruleId, reason: request.action === 'approve' ? 'review_approved' : 'review_revoked' })
-    return this.view(state)
-  }
-
   @Remote('snapshot')
   async snapshot(): Promise<EvolutionSnapshot> {
-    return { ...snapshotFromState(await this.store.load()), contributionAvailable: this.contributionAvailable() }
+    return snapshotFromState(await this.store.load())
   }
 
   @Remote('setEnabled')
@@ -105,7 +73,7 @@ export class MissherEvolutionRemote extends TypertRemoteService {
       kind: 'enabled_changed',
       count: request.enabled ? 1 : 0,
     })
-    return this.view(state)
+    return snapshotFromState(state)
   }
 
   @Remote('reset')
@@ -124,11 +92,7 @@ export class MissherEvolutionRemote extends TypertRemoteService {
       reason: 'manual',
       count: 1,
     })
-    return { snapshot: this.view(result.state), backupId: result.backupId }
-  }
-
-  private view(state: EvolutionState): EvolutionSnapshot {
-    return { ...snapshotFromState(state), contributionAvailable: this.contributionAvailable() }
+    return { snapshot: snapshotFromState(result.state), backupId: result.backupId }
   }
 
   private async audit(event: AuditEvent): Promise<void> {
@@ -145,6 +109,7 @@ export function snapshotFromState(state: EvolutionState): EvolutionSnapshot {
     candidate: 0,
     trial: 0,
     active: 0,
+    guardrail: 0,
     suspended: 0,
     retired: 0,
   }
@@ -154,8 +119,8 @@ export function snapshotFromState(state: EvolutionState): EvolutionSnapshot {
     revision: state.revision,
     enabled: state.enabled,
     health: state.health,
-    lastBackupId: state.lastBackupId,
     lastMaintenanceAt: state.lastMaintenanceAt,
+    diagnostics: learningDiagnostics(state),
     counters: {
       captures: state.counters.captures,
       injections: state.counters.injections,
@@ -170,11 +135,6 @@ export function snapshotFromState(state: EvolutionState): EvolutionSnapshot {
       category: rule.category,
       taskType: rule.taskType,
       instruction: rule.instruction,
-      approved: rule.approvedHash === rule.instructionHash,
-      version: rule.version,
-      sourceSessions: rule.sessionHashes.length,
-      trialSessions: (rule.trialSessionHashes ?? []).length,
-      expiresAt: rule.expiresAt,
       confidence: rule.confidence,
       opportunities: rule.opportunities,
       successes: rule.successes,

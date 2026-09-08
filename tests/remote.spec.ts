@@ -14,6 +14,7 @@ import { MissherEvolutionRemote } from '../src/remote.js'
 import { EvolutionStore } from '../src/store.js'
 import { TYPERT } from '../src/typert.host.js'
 import { TYPERT_REMOTE } from '../src/typert.remote-client.js'
+import { EvolutionEngine } from '../src/engine.js'
 
 const roots: string[] = []
 const contexts: Context[] = []
@@ -33,6 +34,21 @@ afterEach(async () => {
 })
 
 describe('MissherEvolutionRemote', () => {
+  test('exposes a correction reminder separately from Active and verified reuse', async () => {
+    const { store, remote } = await service()
+    const engine = new EvolutionEngine({ store, now: () => 100 })
+    await engine.observeTurn({ sessionId: 'correction', turnId: 1, projectKey: 'project',
+      prompt: '修复代码，应该用明确的 IANA 时区并运行测试核对。' })
+    await engine.completeTurnPersisted({ sessionId: 'correction', turnId: 1,
+      outcome: 'success', completed: true, occurredAt: 100 })
+    const view = await remote.snapshot()
+    expect(EvolutionSnapshotSchema.safeParse(view).success).toBe(true)
+    expect(view.counters).toMatchObject({ guardrail: 1, active: 0, trial: 0 })
+    expect(view.diagnostics).toMatchObject({ correctionReminders: 1, verifiedCorrectionReuses: 0,
+      repeatedCorrections: 0, utilityMeasured: false })
+    expect(JSON.stringify(view)).not.toContain('sourceTaskHash')
+  })
+
   test('returns a strict pathless and hashless snapshot', async () => {
     const { remote } = await service()
     const view = await remote.snapshot()
@@ -74,8 +90,6 @@ describe('MissherEvolutionRemote', () => {
   test('marks all three methods for the live Harness Gateway', async () => {
     const { remote } = await service()
     expect(remoteMethods(remote)).toEqual([
-      { method: 'restore', invocation: { kind: 'direct' } },
-      { method: 'reviewRule', invocation: { kind: 'direct' } },
       { method: 'snapshot', invocation: { kind: 'direct' } },
       { method: 'setEnabled', invocation: { kind: 'direct' } },
       { method: 'reset', invocation: { kind: 'direct' } },

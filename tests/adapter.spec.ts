@@ -1,5 +1,10 @@
 import { describe, expect, test, vi } from 'vitest'
-import { MseAdapter, type AgentLike, type HarnessUserMessage } from '../src/adapter.js'
+import {
+  HARNESS_ADAPTER_DESCRIPTOR,
+  MseAdapter,
+  type AgentLike,
+  type HarnessUserMessage,
+} from '../src/adapter.js'
 import { workflowFamily, sha256 } from '../src/lifecycle.js'
 import { createEmptyState } from '../src/store.js'
 import type { AuditEvent, EvolutionRule, EvolutionState } from '../src/types.js'
@@ -87,7 +92,86 @@ function agent(overrides: Partial<AgentLike['session']['header']> = {}): AgentLi
 }
 
 describe('MseAdapter', () => {
-  test('opens an eligible turn without creating a second prompt injection path', async () => {
+  test('native bash nonzero exit is negative evidence even when tool transport succeeded', async () => {
+    const owner = agent()
+    owner.session.events.push({ type: 'tool/call', time: 105, data: { turn: 1, callId: 'bash-exit' } })
+    const store = new MemoryStore()
+    const adapter = new MseAdapter({ store, now: () => 100 })
+    const messages = [user('修复 TypeScript 测试')]
+    await adapter.preStep({ agent: owner, messages, turn: 1, step: 1, signal: new AbortController().signal }, async () => ({ kind: 'enter', messages }))
+    adapter.toolsResult({ agent: owner, callId: 'bash-exit', name: 'bash' }, { isError: false, value: { exitCode: 1, stdout: 'private output' } })
+    adapter.sessionEvent(owner.session, { type: 'turn/end', time: 120, data: { turn: 1, reason: { kind: 'completed' } } })
+    await adapter.drain()
+    expect(store.audits.find(item => item.kind === 'capture_applied')?.outcomeQuality).toBe('contradicted')
+    expect(JSON.stringify(store.state)).not.toContain('private output')
+    await adapter.dispose()
+  })
+
+  test('native recall uses authoritative header cwd and only credits persisted context', async () => {
+    const owner = agent({ cwd: '/fixture/project' })
+    const store = new MemoryStore({ ...createEmptyState(0), rules: [{ ...rule(), scope: { kind: 'project', keyHash: sha256('/fixture/project') } }] })
+    const adapter = new MseAdapter({ store, now: () => 100, nativeMessage: text => ({ ...user(text, { kind: 'plugin', plugin: 'missher-evolution' }), id: 'native-context' }) })
+    const messages = [user('修复 TypeScript 测试')]
+    const decision = await adapter.preStep({ agent: owner, messages, turn: 1, step: 1, signal: new AbortController().signal }, async () => ({ kind: 'enter', messages }))
+    expect(decision.kind).toBe('enter')
+    if (decision.kind !== 'enter') throw new Error('fixture')
+    expect(decision.messages).toHaveLength(2)
+    await adapter.drain()
+    expect(store.state.counters.injections).toBe(0)
+    adapter.sessionEvent(owner.session, { type: 'user/message', time: 110, data: decision.messages[1] as unknown as Record<string, unknown> })
+    await adapter.drain()
+    expect(store.state.counters.injections).toBe(1)
+    expect(JSON.stringify(store.state)).not.toContain('/fixture/project')
+    await adapter.dispose()
+  })
+
+  test('uncommitted native context is canceled on turn end', async () => {
+    const owner = agent()
+    const store = new MemoryStore({ ...createEmptyState(0), rules: [rule()] })
+    const adapter = new MseAdapter({ store, now: () => 100, nativeMessage: text => user(text, { kind: 'plugin' }) })
+    const messages = [user('修复 TypeScript 测试')]
+    await adapter.preStep({ agent: owner, messages, turn: 1, step: 1, signal: new AbortController().signal }, async () => ({ kind: 'enter', messages }))
+    adapter.sessionEvent(owner.session, { type: 'turn/end', time: 120, data: { turn: 1, reason: { kind: 'aborted' } } })
+    await adapter.drain()
+    expect(store.state.counters.injections).toBe(0)
+    expect(store.state.rules[0]?.opportunities).toBe(3)
+    await adapter.dispose()
+  })
+
+  test('current host eventAt log records tool failure without a legacy events array', async () => {
+    const owner = agent()
+    const events = [{ type: 'tool/call', time: 110, data: { turn: 1, callId: 'current-call' } }]
+    Object.assign(owner.session, { events: undefined, seq: 1, eventAt: (index: number) => events[index] })
+    const store = new MemoryStore()
+    const adapter = new MseAdapter({ store, now: () => 100 })
+    const messages = [user('修复 TypeScript 测试')]
+    await adapter.preStep({ agent: owner, messages, turn: 1, step: 1, signal: new AbortController().signal }, async () => ({ kind: 'enter', messages }))
+    adapter.toolsResult({ agent: owner, callId: 'current-call', name: 'terminal' }, { isError: true, error: { name: 'TimeoutError' } })
+    adapter.sessionEvent(owner.session, { type: 'turn/end', time: 120, data: { turn: 1, reason: { kind: 'completed' } } })
+    await adapter.drain()
+    expect(store.audits.find(item => item.kind === 'capture_applied')?.outcomeQuality).toBe('contradicted')
+    await adapter.dispose()
+  })
+
+  test('declares the Harness reference adapter capabilities', () => {
+    expect(HARNESS_ADAPTER_DESCRIPTOR).toEqual({
+      schemaVersion: 1,
+      id: 'deepseek-harness',
+      displayName: 'DeepSeek Harness',
+      version: '0.7.0',
+      capabilities: [
+        'turns',
+        'tools',
+        'assistant-outcome',
+        'errors',
+        'session-dispose',
+        'model-route',
+      ],
+    })
+    expect(Object.isFrozen(HARNESS_ADAPTER_DESCRIPTOR)).toBe(true)
+  })
+
+  test('observes step 1 and leaves all injection to Brain Hub', async () => {
     const store = new MemoryStore({ ...createEmptyState(0), rules: [rule()] })
     const adapter = new MseAdapter({ store, now: () => 100 })
     const next = vi.fn(async () => ({ kind: 'enter' as const, messages: [user('修复 TypeScript 测试')] }))
@@ -101,8 +185,8 @@ describe('MseAdapter', () => {
     expect(next).toHaveBeenCalledOnce()
     expect(decision).toMatchObject({ kind: 'enter' })
     if (decision.kind !== 'enter') throw new Error('expected enter')
-    expect(decision).toBe(await next.mock.results[0]?.value)
     expect(decision.messages).toEqual([user('修复 TypeScript 测试')])
+    expect(adapter.registry.size).toBe(1)
     await adapter.drain()
     expect(store.state.counters.injections).toBe(0)
   })
@@ -125,8 +209,9 @@ describe('MseAdapter', () => {
 
   test('preserves downstream rejection when selection succeeds', async () => {
     const rejection = { kind: 'reject' as const }
+    const store = new MemoryStore({ ...createEmptyState(0), rules: [rule()] })
     const adapter = new MseAdapter({
-      store: new MemoryStore({ ...createEmptyState(0), rules: [rule()] }),
+      store,
       now: () => 100,
     })
     const decision = await adapter.preStep({
@@ -134,6 +219,8 @@ describe('MseAdapter', () => {
       signal: new AbortController().signal,
     }, async () => rejection)
     expect(decision).toBe(rejection)
+    await adapter.drain()
+    expect(store.state.counters.injections).toBe(0)
   })
 
   test('does not inject on tool continuation or subagent sessions', async () => {
@@ -191,6 +278,6 @@ describe('MseAdapter', () => {
     })
     await adapter.drain()
     expect(store.state.counters.captures).toBe(1)
-    expect(store.state.rules).toEqual([]) // completed without an assistant result is partial
+    expect(store.state.rules).toEqual([])
   })
 })

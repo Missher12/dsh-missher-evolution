@@ -1,0 +1,529 @@
+{
+  "version": "0.7.0",
+  "upstreamCommit": "48ddd5f4e0fd7fd9901724c088958c7849ac3a54",
+  "scope": "Harness plugin and its MIT TypeScript core only; no other host adapter or user data",
+  "entries": [
+    {
+      "source": "harness-plugin/.gitignore",
+      "path": ".gitignore",
+      "sourceSha256": "da83c7f62720c2d41f6f8e88e31b32963b8ea7123e055c14938de55f776dfa59",
+      "exportSha256": "da83c7f62720c2d41f6f8e88e31b32963b8ea7123e055c14938de55f776dfa59"
+    },
+    {
+      "source": "harness-plugin/.npmrc",
+      "path": ".npmrc",
+      "sourceSha256": "5f947ee7a93b78e2d3131807d3f9b355b5bb237b9a88b6909113f4a3fb6de740",
+      "exportSha256": "5f947ee7a93b78e2d3131807d3f9b355b5bb237b9a88b6909113f4a3fb6de740"
+    },
+    {
+      "source": "harness-plugin/LICENSE",
+      "path": "LICENSE",
+      "sourceSha256": "c95ecae30b11b808779efc421c0cf73058ef9c3ececb754107067146af55e1a0",
+      "exportSha256": "c95ecae30b11b808779efc421c0cf73058ef9c3ececb754107067146af55e1a0"
+    },
+    {
+      "source": "harness-plugin/README.md",
+      "path": "README.md",
+      "sourceSha256": "4123133229359d4d0422b08360419cf138a0638387519d51092601f9fd288aac",
+      "exportSha256": "167abf605d6a1670b70b6a6dc794655afdbac6d91fcd42c57d3b0539b10f5e8b"
+    },
+    {
+      "source": "harness-plugin/cordis.patch.yml",
+      "path": "cordis.patch.yml",
+      "sourceSha256": "917e6a908d5686d0b3d138787ab2b6257e49a349b841be11efafec28fb864f9a",
+      "exportSha256": "917e6a908d5686d0b3d138787ab2b6257e49a349b841be11efafec28fb864f9a"
+    },
+    {
+      "source": "harness-plugin/package.json",
+      "path": "package.json",
+      "sourceSha256": "08498a7fba9406f07a6b95313a49866e6ae2843a276d79722edada5fce9e5ee4",
+      "exportSha256": "08498a7fba9406f07a6b95313a49866e6ae2843a276d79722edada5fce9e5ee4"
+    },
+    {
+      "source": "harness-plugin/pnpm-lock.yaml",
+      "path": "pnpm-lock.yaml",
+      "sourceSha256": "7f5a27619eb629f8b3cf0815c4b7df447215b4a5fdca6dfc31a5d1f4e3e17a78",
+      "exportSha256": "7f5a27619eb629f8b3cf0815c4b7df447215b4a5fdca6dfc31a5d1f4e3e17a78"
+    },
+    {
+      "source": "harness-plugin/scripts/native-smoke.mjs",
+      "path": "scripts/native-smoke.mjs",
+      "sourceSha256": "31b06a3f75059d228f4e40386f1231a4a84ed3ab734e345589286183427a8b88",
+      "exportSha256": "35226d9e187d3073f9fe275cdccc50cb8fec81309371d910394b000ebe805a5a"
+    },
+    {
+      "source": "harness-plugin/scripts/verify-package.d.mts",
+      "path": "scripts/verify-package.d.mts",
+      "sourceSha256": "e60c9f8b61e62066cca6461bfd20af0fc27e231cb80f669e3f642570e45a829d",
+      "exportSha256": "e60c9f8b61e62066cca6461bfd20af0fc27e231cb80f669e3f642570e45a829d"
+    },
+    {
+      "source": "harness-plugin/scripts/verify-package.mjs",
+      "path": "scripts/verify-package.mjs",
+      "sourceSha256": "2a43af579db005c8b6a1f4c86cb0186e606a32b06131b2aae0501918c6a49f07",
+      "exportSha256": "2a43af579db005c8b6a1f4c86cb0186e606a32b06131b2aae0501918c6a49f07"
+    },
+    {
+      "source": "harness-plugin/src/adapter-contract.ts",
+      "path": "src/adapter-contract.ts",
+      "sourceSha256": "c7305f29810193528a3491d86a238ce3d88d98eca5209be6984e81329aeef03b",
+      "exportSha256": "023bacd16dd815cd23a5b7d1d05d8ad1ef21887ae8c2b7562f5c2db39b63dbc3"
+    },
+    {
+      "source": "harness-plugin/src/adapter.ts",
+      "path": "src/adapter.ts",
+      "sourceSha256": "378985cfe1b00afab9cf2f1e8f87104f165766e4d19501d08ab8bf37b3cb3ecf",
+      "exportSha256": "3ab731b2df777ee4c5e7302019004e144c1f74d2b0050f70f0eddb4761de52d2"
+    },
+    {
+      "source": "harness-plugin/src/advisor.ts",
+      "path": "src/advisor.ts",
+      "sourceSha256": "6844fb133160275f868a09c8e847e3ef3e24a0b19adaab3c4e80d2442c9f20e8",
+      "exportSha256": "b1220cd5f3e4b80f446f2d5214810243d39dd2143266b479eae0c2589ef5888f"
+    },
+    {
+      "source": "harness-plugin/src/brain-provider.ts",
+      "path": "src/brain-provider.ts",
+      "sourceSha256": "ba2f745334c5dab830e2c77585220b1c68cfb3d009832ddb560752741ff2d929",
+      "exportSha256": "ba2f745334c5dab830e2c77585220b1c68cfb3d009832ddb560752741ff2d929"
+    },
+    {
+      "source": "harness-plugin/src/check-cli.ts",
+      "path": "src/check-cli.ts",
+      "sourceSha256": "52473b51d8bde2956275bbe4d7eb0cb715f34a822b9dc49e358ae61d09172153",
+      "exportSha256": "713af5ff18e61a9b128db63ee2691bf5332ec3c1cdedaf9ca634096540c7a1a5"
+    },
+    {
+      "source": "harness-plugin/src/classifier.ts",
+      "path": "src/classifier.ts",
+      "sourceSha256": "3251901fbf8f3a4228c89016f02edcaa355eff42d2d5b98238cfd43378db0185",
+      "exportSha256": "abfe323b724fdbbb86776e1e6a4c674368e7cf3b34d179a12b645c8166f1033d"
+    },
+    {
+      "source": "harness-plugin/src/client/EvolutionSection.module.css",
+      "path": "src/client/EvolutionSection.module.css",
+      "sourceSha256": "253d28bb1ad8d17f077a115391bca9a9b35d6837697e55f8c3edecf5e6d839cc",
+      "exportSha256": "253d28bb1ad8d17f077a115391bca9a9b35d6837697e55f8c3edecf5e6d839cc"
+    },
+    {
+      "source": "harness-plugin/src/client/EvolutionSection.tsx",
+      "path": "src/client/EvolutionSection.tsx",
+      "sourceSha256": "16923c8799799d216054bcaac47e7fc42dae975400d440e48006e31ab2093283",
+      "exportSha256": "16923c8799799d216054bcaac47e7fc42dae975400d440e48006e31ab2093283"
+    },
+    {
+      "source": "harness-plugin/src/client/contract.ts",
+      "path": "src/client/contract.ts",
+      "sourceSha256": "5aee2665d8214982142a938ca3252ad0235cb6fadd0e651e8dbd38b47485e3ef",
+      "exportSha256": "5aee2665d8214982142a938ca3252ad0235cb6fadd0e651e8dbd38b47485e3ef"
+    },
+    {
+      "source": "harness-plugin/src/client/css-modules.d.ts",
+      "path": "src/client/css-modules.d.ts",
+      "sourceSha256": "1b119eae282e4981c7ee24bbcf0ceafe34d57f6d5e6b148b2b7cc7c09cd89513",
+      "exportSha256": "1b119eae282e4981c7ee24bbcf0ceafe34d57f6d5e6b148b2b7cc7c09cd89513"
+    },
+    {
+      "source": "harness-plugin/src/client/index.ts",
+      "path": "src/client/index.ts",
+      "sourceSha256": "258a5a8276f8dea5379a75a155aa64e225a6befd1c9ea375135013bc882d0bdd",
+      "exportSha256": "258a5a8276f8dea5379a75a155aa64e225a6befd1c9ea375135013bc882d0bdd"
+    },
+    {
+      "source": "harness-plugin/src/client/locales.ts",
+      "path": "src/client/locales.ts",
+      "sourceSha256": "fd9db65d673b2310c04d514612353778b567dc4c7b7dd53b9b7fe3e68a6de6b0",
+      "exportSha256": "fd9db65d673b2310c04d514612353778b567dc4c7b7dd53b9b7fe3e68a6de6b0"
+    },
+    {
+      "source": "harness-plugin/src/config.ts",
+      "path": "src/config.ts",
+      "sourceSha256": "5aee4ea52e940565a29ce05ad1d6537717366d047d26afb9a9fa1b0be106c671",
+      "exportSha256": "5aee4ea52e940565a29ce05ad1d6537717366d047d26afb9a9fa1b0be106c671"
+    },
+    {
+      "source": "harness-plugin/src/diagnostics.ts",
+      "path": "src/diagnostics.ts",
+      "sourceSha256": "e2839b2313df3ec687b03a5c0d39f8eb8343ad8c3c47d9177b51a3de450f9b9e",
+      "exportSha256": "05adbc1bc011fb975dbaca17edb30362e83305730e044826e52548a27f66b3f9"
+    },
+    {
+      "source": "harness-plugin/src/engine.ts",
+      "path": "src/engine.ts",
+      "sourceSha256": "78c2e07ec18f0435374555c7d2fd8efb00c688b2ee06fd23b5a392e626900dac",
+      "exportSha256": "6e1710dee0842efc854e7880f66c9fdaa0fbfc85e20866cf0eaf681eacd78884"
+    },
+    {
+      "source": "harness-plugin/src/experience.ts",
+      "path": "src/experience.ts",
+      "sourceSha256": "17e30a7b85860094f838b80d5c9a5deb9d5dc6cafc368e248a5dd2ab473a40c7",
+      "exportSha256": "cd72b5d711142e1539ad0dfd24522b86274f6d934072758a7c0f5cfd39d61f0b"
+    },
+    {
+      "source": "harness-plugin/src/index.ts",
+      "path": "src/index.ts",
+      "sourceSha256": "b0d1d530158d0b8d4a09adb61d8a781b8c5a3da223cf8b67670df049cb173539",
+      "exportSha256": "b0d1d530158d0b8d4a09adb61d8a781b8c5a3da223cf8b67670df049cb173539"
+    },
+    {
+      "source": "harness-plugin/src/lifecycle.ts",
+      "path": "src/lifecycle.ts",
+      "sourceSha256": "2745748209e2fc72e2c2e42f9724432394308ab5258b4d3f63e5393d621b94fb",
+      "exportSha256": "45bac932281c419a34a31fe67ce5ab58e038fff0ecafb7fdef80defcaca7d79c"
+    },
+    {
+      "source": "harness-plugin/src/maintenance.ts",
+      "path": "src/maintenance.ts",
+      "sourceSha256": "613d9f66d918a2afdf2a15390b2eb147cecd30ca40fe33a21917bdeff82d4344",
+      "exportSha256": "39c4d10dfe3fa2c3d29f1eabc70f78abb110bbc4256758233377fc0417921da5"
+    },
+    {
+      "source": "harness-plugin/src/registry.ts",
+      "path": "src/registry.ts",
+      "sourceSha256": "557a6ad22d8e6027a5b3013f031425246fa028e62f4a67e3cf4f88046821c1c1",
+      "exportSha256": "f28d5bde8ebb2c4880bc5c91c57cf1d65a707f1ffb42ebe02e7f685b629ba9f1"
+    },
+    {
+      "source": "harness-plugin/src/remote-contract.ts",
+      "path": "src/remote-contract.ts",
+      "sourceSha256": "b81fff85917bc82d242c6bc2fbaa6d69ab332d8361be56d459128b92a1559ed6",
+      "exportSha256": "b81fff85917bc82d242c6bc2fbaa6d69ab332d8361be56d459128b92a1559ed6"
+    },
+    {
+      "source": "harness-plugin/src/remote.ts",
+      "path": "src/remote.ts",
+      "sourceSha256": "abfd1c30ee505f15d53f58b3015c42fe591aa2e64bc62d34cfae02a07f751a49",
+      "exportSha256": "abfd1c30ee505f15d53f58b3015c42fe591aa2e64bc62d34cfae02a07f751a49"
+    },
+    {
+      "source": "harness-plugin/src/store.ts",
+      "path": "src/store.ts",
+      "sourceSha256": "a5b2fedb5d7b6d935c117de300a53fd1b95a654b4784f87124b325aef71b1834",
+      "exportSha256": "72c559ff05402720d6100e8f10ae593eca30f7b992797bd82540c67f548e1fd8"
+    },
+    {
+      "source": "harness-plugin/src/typert.host.ts",
+      "path": "src/typert.host.ts",
+      "sourceSha256": "c2f9a353f43e974e7fbdb75a04beed497c94949aff2599fefd767d76dcf1caf5",
+      "exportSha256": "c2f9a353f43e974e7fbdb75a04beed497c94949aff2599fefd767d76dcf1caf5"
+    },
+    {
+      "source": "harness-plugin/src/typert.remote-client.ts",
+      "path": "src/typert.remote-client.ts",
+      "sourceSha256": "06ca055cac77aca2b1bb53fbb3b4a5b44238e96cfeae88748175ecf156b32916",
+      "exportSha256": "06ca055cac77aca2b1bb53fbb3b4a5b44238e96cfeae88748175ecf156b32916"
+    },
+    {
+      "source": "harness-plugin/src/types.ts",
+      "path": "src/types.ts",
+      "sourceSha256": "566e00fe085d8519fbb9d73878cfddf746152c7d702ba66ae8420f0285b3937c",
+      "exportSha256": "1d95e9a37d858b93d3e9c7df22f536db09d4b567d048abb8c5cee24e9064c58f"
+    },
+    {
+      "source": "harness-plugin/tests/adapter.spec.ts",
+      "path": "tests/adapter.spec.ts",
+      "sourceSha256": "2f00278d06a1257db0eaabd8ec7d991aa7e874a46eb390e3fb8b9f86f0b46ef9",
+      "exportSha256": "2f00278d06a1257db0eaabd8ec7d991aa7e874a46eb390e3fb8b9f86f0b46ef9"
+    },
+    {
+      "source": "harness-plugin/tests/advisor.spec.ts",
+      "path": "tests/advisor.spec.ts",
+      "sourceSha256": "436ff2db83cfbb9583063089bb82cd20b7cc9c63098d39048c4959baf357c29f",
+      "exportSha256": "436ff2db83cfbb9583063089bb82cd20b7cc9c63098d39048c4959baf357c29f"
+    },
+    {
+      "source": "harness-plugin/tests/brain-provider.spec.ts",
+      "path": "tests/brain-provider.spec.ts",
+      "sourceSha256": "29986895e5f01b5f6caaa0c2eda5f33604c6c58481e50a5308e957e7daafdbb4",
+      "exportSha256": "29986895e5f01b5f6caaa0c2eda5f33604c6c58481e50a5308e957e7daafdbb4"
+    },
+    {
+      "source": "harness-plugin/tests/bundle-integration.spec.ts",
+      "path": "tests/bundle-integration.spec.ts",
+      "sourceSha256": "15bcd5ef5ab1a62a03dcb10f7ccae37e936d9915a1b5dee687281baaba230c03",
+      "exportSha256": "15bcd5ef5ab1a62a03dcb10f7ccae37e936d9915a1b5dee687281baaba230c03"
+    },
+    {
+      "source": "harness-plugin/tests/classifier.spec.ts",
+      "path": "tests/classifier.spec.ts",
+      "sourceSha256": "fdd640838b7e2ed0d77d1b093effd242309043351bb408decf02fb222a714864",
+      "exportSha256": "fdd640838b7e2ed0d77d1b093effd242309043351bb408decf02fb222a714864"
+    },
+    {
+      "source": "harness-plugin/tests/evolution-section.client.spec.tsx",
+      "path": "tests/evolution-section.client.spec.tsx",
+      "sourceSha256": "4287987b4129d4afcd30fc74524f69618f04eaab595a2ccaf85f895cbc7813f9",
+      "exportSha256": "4287987b4129d4afcd30fc74524f69618f04eaab595a2ccaf85f895cbc7813f9"
+    },
+    {
+      "source": "harness-plugin/tests/fixtures/python-parity.json",
+      "path": "tests/fixtures/python-parity.json",
+      "sourceSha256": "e656df88a07fc174f4e04239f912843322f405a136fa2b673883fd55666114d5",
+      "exportSha256": "e656df88a07fc174f4e04239f912843322f405a136fa2b673883fd55666114d5"
+    },
+    {
+      "source": "harness-plugin/tests/integrated-method-parity.spec.ts",
+      "path": "tests/integrated-method-parity.spec.ts",
+      "sourceSha256": "fa7d26014462411ad833fe0e9cdfa33a552baf501db7aa7809e3cbc85200321e",
+      "exportSha256": "a2863e2d6cd3c9806096713c032ba098a145eac171caa5bfdb30fad3a0348f4c"
+    },
+    {
+      "source": "harness-plugin/tests/lifecycle.spec.ts",
+      "path": "tests/lifecycle.spec.ts",
+      "sourceSha256": "c1487d59fded7b4cf062e2a4b90077b2d963e3c59208985e686e2a351017c5c6",
+      "exportSha256": "c1487d59fded7b4cf062e2a4b90077b2d963e3c59208985e686e2a351017c5c6"
+    },
+    {
+      "source": "harness-plugin/tests/maintenance.spec.ts",
+      "path": "tests/maintenance.spec.ts",
+      "sourceSha256": "e57e5ae31ba6671a7f1cc85ac7f2b339b5bbc1a5e5c8b9f6a15d6c2faeea0b9d",
+      "exportSha256": "dfe2f3eeccc731b9453da521451a4ccd2742a51452154f6214c533d1654f54fc"
+    },
+    {
+      "source": "harness-plugin/tests/manifest.spec.ts",
+      "path": "tests/manifest.spec.ts",
+      "sourceSha256": "6393a3e8c6dc0199d34baa8fe8a22080769d873045907681a93696bb788f6f8c",
+      "exportSha256": "c816d22c1f840a1ac47a84ea6aa3a17a685d596a29434fafdd23f3eb5b2af5d5"
+    },
+    {
+      "source": "harness-plugin/tests/native-smoke.spec.ts",
+      "path": "tests/native-smoke.spec.ts",
+      "sourceSha256": "3debb34ce887eff63df244305c593c8639b55bacd820364cc3019d5aff1ccd2f",
+      "exportSha256": "4e3f6a111b74ad38e0375df85767ce42bce639e6f4083a030b40d62317be79db"
+    },
+    {
+      "source": "harness-plugin/tests/privacy.spec.ts",
+      "path": "tests/privacy.spec.ts",
+      "sourceSha256": "6f6c38bc564764a2001868724a9eae48bc195034cbb5a03ed87ad97db6761908",
+      "exportSha256": "6f6c38bc564764a2001868724a9eae48bc195034cbb5a03ed87ad97db6761908"
+    },
+    {
+      "source": "harness-plugin/tests/python-parity.spec.ts",
+      "path": "tests/python-parity.spec.ts",
+      "sourceSha256": "f27dbe98fbb441333c1a21749174fc39fb6ecc2d2c8a1f9288a48f7984c59ac0",
+      "exportSha256": "f27dbe98fbb441333c1a21749174fc39fb6ecc2d2c8a1f9288a48f7984c59ac0"
+    },
+    {
+      "source": "harness-plugin/tests/registry.spec.ts",
+      "path": "tests/registry.spec.ts",
+      "sourceSha256": "a5c4fd1d7c7ed6f66238f5ec24467ace4f213aadf3fe410fae487c8b3b2b1c3c",
+      "exportSha256": "a5c4fd1d7c7ed6f66238f5ec24467ace4f213aadf3fe410fae487c8b3b2b1c3c"
+    },
+    {
+      "source": "harness-plugin/tests/remote.spec.ts",
+      "path": "tests/remote.spec.ts",
+      "sourceSha256": "cbe23b850df5e5ca829693c356ee811bf5c4d41c6ca822bd6eb98227368f7a3e",
+      "exportSha256": "cbe23b850df5e5ca829693c356ee811bf5c4d41c6ca822bd6eb98227368f7a3e"
+    },
+    {
+      "source": "harness-plugin/tests/store.spec.ts",
+      "path": "tests/store.spec.ts",
+      "sourceSha256": "c7a61f38570f23136c7b60c7840bf9761b786a8822ad2dc8dcdc5dc360e8f3f6",
+      "exportSha256": "c7a61f38570f23136c7b60c7840bf9761b786a8822ad2dc8dcdc5dc360e8f3f6"
+    },
+    {
+      "source": "harness-plugin/tests/verification-native.spec.ts",
+      "path": "tests/verification-native.spec.ts",
+      "sourceSha256": "c25346df4ca60055cb2a69caca80ec7c57c031d63b12284a4469ae4f0a4142f2",
+      "exportSha256": "52920a211407359b121cb63dced9cee7d717a9fdf314834e1c1a03dcca3251bd"
+    },
+    {
+      "source": "harness-plugin/tsconfig.client.json",
+      "path": "tsconfig.client.json",
+      "sourceSha256": "6be5845c253d1a78a3d4ea3810b51f5e1556f67c76cdea7462def879c82e2b98",
+      "exportSha256": "6be5845c253d1a78a3d4ea3810b51f5e1556f67c76cdea7462def879c82e2b98"
+    },
+    {
+      "source": "harness-plugin/tsconfig.json",
+      "path": "tsconfig.json",
+      "sourceSha256": "0096d4986f36fa6c6c9d93b6aaee90240f35386d5d4d23be7fae87a65758505f",
+      "exportSha256": "0096d4986f36fa6c6c9d93b6aaee90240f35386d5d4d23be7fae87a65758505f"
+    },
+    {
+      "source": "harness-plugin/tsdown.config.ts",
+      "path": "tsdown.config.ts",
+      "sourceSha256": "0f929a8cfee572b0fdc039905cd8c16ea7cfc34db7882ab6eda1e839bf75deb5",
+      "exportSha256": "0f929a8cfee572b0fdc039905cd8c16ea7cfc34db7882ab6eda1e839bf75deb5"
+    },
+    {
+      "source": "harness-plugin/vitest.config.ts",
+      "path": "vitest.config.ts",
+      "sourceSha256": "014b973af70ee68747766807a64a6cf7c07285cfe87bafdc27a0850324118535",
+      "exportSha256": "014b973af70ee68747766807a64a6cf7c07285cfe87bafdc27a0850324118535"
+    },
+    {
+      "source": "agent-product/LICENSE",
+      "path": "agent-product/LICENSE",
+      "sourceSha256": "948abf69b56c5c605182dd1c5809e7ec54fba53100ff47ed1a8f9d25de0e2f72",
+      "exportSha256": "948abf69b56c5c605182dd1c5809e7ec54fba53100ff47ed1a8f9d25de0e2f72"
+    },
+    {
+      "source": "agent-product/src/adapter-contract.ts",
+      "path": "agent-product/src/adapter-contract.ts",
+      "sourceSha256": "1e066a6d3404667a462044b8df3395885cbf09bba24d10aecad603a7f8d92208",
+      "exportSha256": "1e066a6d3404667a462044b8df3395885cbf09bba24d10aecad603a7f8d92208"
+    },
+    {
+      "source": "agent-product/src/advisor.ts",
+      "path": "agent-product/src/advisor.ts",
+      "sourceSha256": "9fe3fc02d8f9f49f454c89b8d1698a09173ca74abcef795c7b1f589009d9b9ce",
+      "exportSha256": "9fe3fc02d8f9f49f454c89b8d1698a09173ca74abcef795c7b1f589009d9b9ce"
+    },
+    {
+      "source": "agent-product/src/check-cli.ts",
+      "path": "agent-product/src/check-cli.ts",
+      "sourceSha256": "44486b9302509a30d217016b45f94cba591317e4032cd01e9b7f9b223a0c624d",
+      "exportSha256": "44486b9302509a30d217016b45f94cba591317e4032cd01e9b7f9b223a0c624d"
+    },
+    {
+      "source": "agent-product/src/classifier.ts",
+      "path": "agent-product/src/classifier.ts",
+      "sourceSha256": "3ef4afd89542ac9424efafd1f35a168077cf605a94be6775d797d96413bb87b2",
+      "exportSha256": "3ef4afd89542ac9424efafd1f35a168077cf605a94be6775d797d96413bb87b2"
+    },
+    {
+      "source": "agent-product/src/cli.ts",
+      "path": "agent-product/src/cli.ts",
+      "sourceSha256": "8b6c0a52d17ca4ad261bc162961de5d7eff26df7d9fe01636e2d30f90cb9a0b0",
+      "exportSha256": "8b6c0a52d17ca4ad261bc162961de5d7eff26df7d9fe01636e2d30f90cb9a0b0"
+    },
+    {
+      "source": "agent-product/src/conformance.ts",
+      "path": "agent-product/src/conformance.ts",
+      "sourceSha256": "37d1656316f6a2b4f52b9bd4432f95153b9a453940cd224d5306ee4bf83b8cad",
+      "exportSha256": "37d1656316f6a2b4f52b9bd4432f95153b9a453940cd224d5306ee4bf83b8cad"
+    },
+    {
+      "source": "agent-product/src/diagnostics.ts",
+      "path": "agent-product/src/diagnostics.ts",
+      "sourceSha256": "f6006c78c42d4e80b9938c0738336d47858dffcd12305f24ca3b1c1d2e47cc55",
+      "exportSha256": "f6006c78c42d4e80b9938c0738336d47858dffcd12305f24ca3b1c1d2e47cc55"
+    },
+    {
+      "source": "agent-product/src/engine.ts",
+      "path": "agent-product/src/engine.ts",
+      "sourceSha256": "0f55a59f786c1d262b9bfffb01b5d9f18ce72cca284c78d3a178328fba435378",
+      "exportSha256": "0f55a59f786c1d262b9bfffb01b5d9f18ce72cca284c78d3a178328fba435378"
+    },
+    {
+      "source": "agent-product/src/experience.ts",
+      "path": "agent-product/src/experience.ts",
+      "sourceSha256": "a361ec08af421a706e17c8a273113ae0105261bf66491c313684c220a96ad620",
+      "exportSha256": "a361ec08af421a706e17c8a273113ae0105261bf66491c313684c220a96ad620"
+    },
+    {
+      "source": "agent-product/src/improvement.ts",
+      "path": "agent-product/src/improvement.ts",
+      "sourceSha256": "f86ba5d87b6eab6ca116c8408bc3a06ee6ac139d21713efc7887997ad1a1397a",
+      "exportSha256": "f86ba5d87b6eab6ca116c8408bc3a06ee6ac139d21713efc7887997ad1a1397a"
+    },
+    {
+      "source": "agent-product/src/index.ts",
+      "path": "agent-product/src/index.ts",
+      "sourceSha256": "2e7d371e6af230a4c8573253d4c631817267ea8191ed2235fae6e1f5526a36bf",
+      "exportSha256": "2e7d371e6af230a4c8573253d4c631817267ea8191ed2235fae6e1f5526a36bf"
+    },
+    {
+      "source": "agent-product/src/jsonl.ts",
+      "path": "agent-product/src/jsonl.ts",
+      "sourceSha256": "431ec1c48937841205f09902d55bc14fb3c505f6f556eb868718ebc099fc18d5",
+      "exportSha256": "431ec1c48937841205f09902d55bc14fb3c505f6f556eb868718ebc099fc18d5"
+    },
+    {
+      "source": "agent-product/src/lifecycle.ts",
+      "path": "agent-product/src/lifecycle.ts",
+      "sourceSha256": "222f0d8c5cc89e01c6b57ef2528bfd66d5311697836c35dbfeb2b3df718e77cd",
+      "exportSha256": "222f0d8c5cc89e01c6b57ef2528bfd66d5311697836c35dbfeb2b3df718e77cd"
+    },
+    {
+      "source": "agent-product/src/maintenance.ts",
+      "path": "agent-product/src/maintenance.ts",
+      "sourceSha256": "eacd51b1086a60e1193acbbcde1ec5f2f36dc06e830a169e295309b99179be82",
+      "exportSha256": "eacd51b1086a60e1193acbbcde1ec5f2f36dc06e830a169e295309b99179be82"
+    },
+    {
+      "source": "agent-product/src/method-evaluator.ts",
+      "path": "agent-product/src/method-evaluator.ts",
+      "sourceSha256": "dbad0912a3fac07ed9b48bafe9799326dc7d70b661ba69c41ecdd5b8e8e8c345",
+      "exportSha256": "dbad0912a3fac07ed9b48bafe9799326dc7d70b661ba69c41ecdd5b8e8e8c345"
+    },
+    {
+      "source": "agent-product/src/methods.ts",
+      "path": "agent-product/src/methods.ts",
+      "sourceSha256": "e196c6dc552658d14b8f0601f631a38af1d862011a62cacd65a7be3b306770fc",
+      "exportSha256": "e196c6dc552658d14b8f0601f631a38af1d862011a62cacd65a7be3b306770fc"
+    },
+    {
+      "source": "agent-product/src/node.ts",
+      "path": "agent-product/src/node.ts",
+      "sourceSha256": "87ebc690f1075a9dac87e0b180f50f5d7d029df2377a4236a1f20107b949d0ed",
+      "exportSha256": "87ebc690f1075a9dac87e0b180f50f5d7d029df2377a4236a1f20107b949d0ed"
+    },
+    {
+      "source": "agent-product/src/paths.ts",
+      "path": "agent-product/src/paths.ts",
+      "sourceSha256": "33ba4d1e33505edcdd78728b2a4d1c6e8dd8872d3ea1030f5804a31f97a35bed",
+      "exportSha256": "33ba4d1e33505edcdd78728b2a4d1c6e8dd8872d3ea1030f5804a31f97a35bed"
+    },
+    {
+      "source": "agent-product/src/registry.ts",
+      "path": "agent-product/src/registry.ts",
+      "sourceSha256": "2a4d1524dd88421d218b980c34b9c1dbd4523944bcc390eec45605a5fdfe1799",
+      "exportSha256": "2a4d1524dd88421d218b980c34b9c1dbd4523944bcc390eec45605a5fdfe1799"
+    },
+    {
+      "source": "agent-product/src/repair-controller.ts",
+      "path": "agent-product/src/repair-controller.ts",
+      "sourceSha256": "65771c9bd7eea3c375180f391a080add093485254e94359066448f57af89e2b9",
+      "exportSha256": "65771c9bd7eea3c375180f391a080add093485254e94359066448f57af89e2b9"
+    },
+    {
+      "source": "agent-product/src/state.ts",
+      "path": "agent-product/src/state.ts",
+      "sourceSha256": "672a96179f9883b1e470103c0a6507f987c62dbc80f547fc8c675ce877678417",
+      "exportSha256": "672a96179f9883b1e470103c0a6507f987c62dbc80f547fc8c675ce877678417"
+    },
+    {
+      "source": "agent-product/src/store.ts",
+      "path": "agent-product/src/store.ts",
+      "sourceSha256": "e130b1758c137d35a2de6478e8d5f832bcde67b4b7ac0c0306dba9e5e02fff6a",
+      "exportSha256": "e130b1758c137d35a2de6478e8d5f832bcde67b4b7ac0c0306dba9e5e02fff6a"
+    },
+    {
+      "source": "agent-product/src/types.ts",
+      "path": "agent-product/src/types.ts",
+      "sourceSha256": "b1ae7b5110ef96bbdd6f78e36d4e4a526fb672375bf517796969f71954599fa4",
+      "exportSha256": "b1ae7b5110ef96bbdd6f78e36d4e4a526fb672375bf517796969f71954599fa4"
+    },
+    {
+      "source": "agent-product/src/verification-files.ts",
+      "path": "agent-product/src/verification-files.ts",
+      "sourceSha256": "d4a9e0a565e1ae54395eb15f8b9c787abae27725b08a1ee445bbc91a40033bd3",
+      "exportSha256": "d4a9e0a565e1ae54395eb15f8b9c787abae27725b08a1ee445bbc91a40033bd3"
+    },
+    {
+      "source": "agent-product/src/verification.ts",
+      "path": "agent-product/src/verification.ts",
+      "sourceSha256": "df449a0f8becbc0b70910b12f72dd0c55dcbd1386f3159ccbd29be5fb54c25b0",
+      "exportSha256": "df449a0f8becbc0b70910b12f72dd0c55dcbd1386f3159ccbd29be5fb54c25b0"
+    },
+    {
+      "source": "tests/fixtures/integrated-method-cases.json",
+      "path": "tests/fixtures/integrated-method-cases.json",
+      "sourceSha256": "178f48e3de3d3dac370b2b5e618c1da70d10de15f2de30ac4a7d6eb89d81f817",
+      "exportSha256": "178f48e3de3d3dac370b2b5e618c1da70d10de15f2de30ac4a7d6eb89d81f817"
+    }
+  ],
+  "adaptations": [
+    "Harness moved to repository root; relative TypeScript core imports adjusted only.",
+    "Root tests and CI now target the independent repository; shared golden cases replace a live Python comparison.",
+    "README and Agent runbook describe public distribution and the selected 0.7.0 API.",
+    "Smoke helper reports profileInstall=false without a real CLI; published runtime is unchanged."
+  ],
+  "artifact": {
+    "name": "dsh-missher-evolution-0.7.0.tgz",
+    "bytes": 228410,
+    "sha256": "339702ea314c20d464fb27511d897f13aac6e2001681275da5ac9b5b9298412a",
+    "byteIdenticalToUpstreamRelease": true
+  }
+}

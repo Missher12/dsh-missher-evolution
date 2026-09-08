@@ -125,6 +125,30 @@ describe('EvolutionSection', () => {
     expect(document.body.textContent).not.toMatch(/sessionHash|instructionHash|\/Users\//u)
   })
 
+  test('labels correction outcomes without presenting reminders as Active successes', async () => {
+    const value = snapshot({ rules: [{ id: 'rule_correction', status: 'guardrail', category: 'guardrail',
+      taskType: 'coding', instruction: '检查明确的 IANA 时区并运行测试核对真实结果。',
+      confidence: 0.65, opportunities: 4, successes: 2, failures: 0, corrections: 1 }] })
+    render(<EvolutionSection {...props({ snapshot: async () => ({ ok: true as const, value }) })} />)
+    expect(await screen.findByText('纠错提醒')).toBeTruthy()
+    expect(screen.getByText('任务级通过 / 再次纠正: 2 / 1')).toBeTruthy()
+  })
+
+  test('separates observed repair cases and offline method validation from Active success', async () => {
+    const value = snapshot({ diagnostics: {
+      captures: 9, active: 0, candidates: 0, trials: 0, unscoped: 0, legacyUnverified: 0,
+      waitingTreatment: 0, waitingControl: 0, negativeTreatment: 0, inconclusive: 0, utilityMeasured: false,
+      improvement: { cases: 4, repairedCases: 2, validatedMethods: 1, importedCandidates: 1, aiProposals: 1 },
+    } as EvolutionSnapshot['diagnostics'] })
+    render(<EvolutionSection {...props({ snapshot: async () => ({ ok: true as const, value }) })} />)
+    expect(await screen.findByText('纠错证据案例')).toBeTruthy()
+    expect(screen.getByText('已观察修复对')).toBeTruthy()
+    expect(screen.getByText('方法离线评测通过')).toBeTruthy()
+    expect(screen.getByText('导入待本地验证')).toBeTruthy()
+    expect(screen.getByText('AI 方法提案')).toBeTruthy()
+    expect(document.body.textContent).not.toMatch(/智能提升|整体提升|100%/u)
+  })
+
   test('shows only a local generic error and supports retry', async () => {
     const read = vi.fn()
       .mockResolvedValueOnce({
@@ -184,15 +208,4 @@ describe('EvolutionSection', () => {
     await act(async () => { pending[0]?.({ ok: true, value: snapshot({ revision: 2, enabled: true }) }) })
     expect((screen.getByRole('checkbox', { name: '启用自动进化' }) as HTMLInputElement).checked).toBe(false)
   })
-})
-
-test('reviews a visible rule at its displayed revision and version', async () => {
-  const rule = { id: 'rule_review', status: 'trial' as const, category: 'workflow' as const,
-    taskType: 'coding' as const, instruction: '执行前检查目标，完成后验证结果。', confidence: 0.8,
-    successes: 0, failures: 0, corrections: 0, opportunities: 0, version: 2, approved: false }
-  const reviewRule = vi.fn(async () => ({ ok: true as const, value: snapshot({ revision: 3, rules: [{ ...rule, approved: true, version: 3 }] }) }))
-  render(<EvolutionSection {...props({ snapshot: async () => ({ ok: true, value: snapshot({ rules: [rule], contributionAvailable: false }) }), reviewRule })} />)
-  fireEvent.click(await screen.findByRole('button', { name: zh.approve }))
-  await waitFor(() => expect(reviewRule).toHaveBeenCalledWith({ ruleId: rule.id, action: 'approve', expectedRevision: 2, expectedVersion: 2 }))
-  expect(await screen.findByRole('button', { name: zh.revoke })).toBeDefined()
 })
