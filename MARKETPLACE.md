@@ -45,3 +45,16 @@ to simulate publication. The PR link and current status will be appended after s
 The first public-source CI run failed because type checking preceded generation
 of lib declarations. The next commit corrected CI ordering; no runtime changes or
 archive replacement were made. The tagged commit is the passing source revision.
+
+## Upstream check blocker (2026-09-08, after submission)
+
+PR #4672 Submission gate passed. Its `check` job failed in the shared site build,
+not in the submission gate: job 102116599262 in run 34242683452 cannot derive the
+added-date of wwweljf's dsh-ding-sound, dsh-wx-push and dsh-wx-remote entries.
+Those entries were introduced by upstream commit
+`5599809cf0e63ef2249d923c805c134d6b73e9ca` (#2662), the tested merge base.
+The workflow explicitly fetched full history. Our PR head remains
+`bea7944d00b87317aa9e39cc3b43c551d6f9884c` and its diff adds only our YAML.
+The failure evidence has been reported on PR #4672 for upstream maintenance.
+No unrelated entries, date data or upstream workflow were changed. Current state
+is an upstream site-build blocker, not simply a fully passing PR awaiting review.

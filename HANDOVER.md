@@ -26,3 +26,8 @@ Remaining external step: upstream must review/merge PR #4672 and rebuild the
 catalog before the DSH Market search can find the entry. Do not change Desktop or
 its local cache to pretend it is listed. If upstream requests runtime changes,
 coordinate with the unified MSE source owner and choose a new patch release.
+
+Update after submission: Submission gate succeeded, but the upstream site-build
+check failed on missing added-dates for three unrelated wwweljf entries from #2662.
+See MARKETPLACE.md and the diagnostic comment on PR #4672. The plugin/release is
+unchanged; upstream must fix that shared build failure before normal review/merge.
