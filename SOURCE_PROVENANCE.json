@@ -283,7 +283,7 @@
       "source": "harness-plugin/tests/manifest.spec.ts",
       "path": "tests/manifest.spec.ts",
       "sourceSha256": "6393a3e8c6dc0199d34baa8fe8a22080769d873045907681a93696bb788f6f8c",
-      "exportSha256": "c816d22c1f840a1ac47a84ea6aa3a17a685d596a29434fafdd23f3eb5b2af5d5"
+      "exportSha256": "d9d18025c3dbe07510273c76952499ce95598649552ec7ce806b9f7da604c2f8"
     },
     {
       "source": "harness-plugin/tests/native-smoke.spec.ts",

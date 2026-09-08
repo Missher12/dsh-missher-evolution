@@ -26,8 +26,8 @@ jobs:
           node-version: 22.19.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run test
       - run: pnpm exec tsc -p tsconfig.json --noEmit
       - run: pnpm exec tsc -p tsconfig.client.json --noEmit
-      - run: pnpm run test
       - run: pnpm pack --pack-destination ./dist
       - run: node scripts/verify-package.mjs ./dist/dsh-missher-evolution-0.7.0.tgz

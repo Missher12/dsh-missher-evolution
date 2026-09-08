@@ -16,7 +16,9 @@ describe('bundle manifest', () => {
     const workflow = readFileSync(resolve(root, '.github/workflows/verify.yml'), 'utf8')
     const install = workflow.indexOf('pnpm install --frozen-lockfile')
     expect(install).toBeGreaterThan(-1)
-    expect(workflow.indexOf('pnpm exec tsc -p tsconfig.json --noEmit')).toBeGreaterThan(install)
+    const buildAndTest = workflow.indexOf('pnpm run test')
+    expect(buildAndTest).toBeGreaterThan(install)
+    expect(workflow.indexOf('pnpm exec tsc -p tsconfig.json --noEmit')).toBeGreaterThan(buildAndTest)
   })
 
   test('rejects source-tree imports and absolute build paths in published code', () => {
